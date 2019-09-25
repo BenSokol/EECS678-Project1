@@ -8,7 +8,7 @@ The project specification is located [here](https://web.archive.org/web/20190925
 |             | Required                   |
 | ----------- | -------------------------- |
 | OS          | Linux<br>macOS             |
-| Compiler    | gcc >= 5.4<br>clang >= 3.4 |
+| Compiler    | gcc >= 7<br>clang >= 5     |
 | C Version   | c11                        |
 | C++ Version | c++17                      |
 
