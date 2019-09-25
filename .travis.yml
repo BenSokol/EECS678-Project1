@@ -1,5 +1,4 @@
 language: cpp
-dist: xenial
 notifications:
   email:
     recipients:
@@ -21,31 +20,29 @@ notifications:
       - "Result: *%{result}*"
 matrix:
   include:
-  - name: Linux - Ubuntu - Xenial - g++-5
+  - name: Linux - Ubuntu - Xenial - GCC 5.4.0
     os: linux
+    dist: xenial
     compiler: gcc
-  - name: Linux - Ubuntu - Xenial - g++-8
+  - name: Linux - Ubuntu - Bionic - GCC 7.4.0
     os: linux
+    dist: bionic
     compiler: gcc
-    addons:
-      apt:
-        sources:
-        - ubuntu-toolchain-r-test
-        packages:
-        - gcc-8
-        - g++-8
-    env:
-    - MATRIX_EVAL="CC=gcc-8 && CXX=g++-8"
-  - name: macOS - 10.14 - clang
+  - name: Linux - Ubuntu - Bionic - Clang 7.0.0
+    os: linux
+    dist: bionic
+    compiler: clang
+  - name: macOS - 10.14 - xcode11 - clang 8.0.0
     os: osx
     osx_image: xcode11
-  - name: macOS - 10.14 - g++-8
+  - name: macOS - 10.14 - xcode11 - GCC 9.2.0
     os: osx
     osx_image: xcode11
     env:
     - MATRIX_EVAL="brew link gcc && CC=gcc-9 && CXX=g++-9"
-  - name: Linux - Ubuntu - Xenial - cppcheck
+  - name: Linux - Ubuntu - Bionic - cppcheck
     os: linux
+    dist: bionic
     compiler: gcc
     addons:
       apt:
@@ -61,4 +58,4 @@ before_install:
 script:
 - make var
 - make
-- make run
+- make test

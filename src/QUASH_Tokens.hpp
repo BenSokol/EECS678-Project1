@@ -3,7 +3,7 @@
 * @Author:   Ben Sokol <Ben>
 * @Email:    ben@bensokol.com
 * @Created:  August 28th, 2019 [4:56pm]
-* @Modified: September 25th, 2019 [5:40pm]
+* @Modified: September 25th, 2019 [6:40pm]
 * @Version:  1.0.0
 *
 * Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
@@ -18,7 +18,7 @@
 namespace QUASH {
   class Tokens {
    public:
-    Tokens(std::string aString);
+    explicit Tokens(const std::string &aString);
     ~Tokens();
 
     uint8_t status() const;
