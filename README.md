@@ -15,6 +15,9 @@ The project specification is located [here](https://web.archive.org/web/20190925
 ## To use
 ### To compile
 ```bash
+git clone https://github.com/BenSokol/EECS678-Project1
+cd EECS678-Project1
+git submodule update --init --recursive
 make
 ```
 For compilation help, see [this](https://github.com/BenSokol/build-tools) page.
