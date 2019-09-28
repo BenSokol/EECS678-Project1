@@ -12,6 +12,12 @@ Should utilize fork() and exec()
 
 
 namespace QUASH{
+  Command::Command() {
 
+  }
+
+  Command::~Command() {
+    
+  }
 
 }
