@@ -17,7 +17,9 @@ namespace QUASH{
     Command();
     ~Command();
 
+    uint8_t findExecutable(std::string exeName);
 
+    uint8_t runExecutable(); //Probably needs more parameters
 
 
   };
