@@ -4,5 +4,14 @@ Should search PATH until the executable specified is found
 Should utilize fork() and exec()
 
 */
+#ifndef COMMAND_HPP
+#define COMMAND_HPP
 
 #include "QUASH_public.hpp"
+#include <string>
+
+
+namespace QUASH{
+
+
+}
