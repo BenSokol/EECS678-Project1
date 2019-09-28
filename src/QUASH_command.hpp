@@ -12,12 +12,15 @@ Should utilize fork() and exec()
 
 
 namespace QUASH{
-  Command::Command() {
+  class Command{
+  public:
+    Command();
+    ~Command();
 
-  }
 
-  Command::~Command() {
-    
-  }
+
+
+  };
 
 }
+#endif
