@@ -24,6 +24,21 @@ matrix:
     os: linux
     dist: xenial
     compiler: gcc
+  - name: linux - Ubuntu - Xenial - Clang 5.0.0
+    os: linux
+    dist: xenial
+    compiler: clang
+    addons:
+      apt:
+        packages:
+          - clang-5.0
+        sources:
+          - ubuntu-toolchain-r-test
+          - llvm-toolchain-trusty-5.0
+          - sourceline: 'deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-5.0 main'
+            key_url: 'https://apt.llvm.org/llvm-snapshot.gpg.key'
+    env:
+    - MATRIX_EVAL="CC=clang-5.0 && CXX=clang-5.0"
   - name: Linux - Ubuntu - Bionic - GCC 7.4.0
     os: linux
     dist: bionic

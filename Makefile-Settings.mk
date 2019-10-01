@@ -2,7 +2,7 @@
 # @Author:   Ben Sokol <Ben>
 # @Email:    ben@bensokol.com
 # @Created:  February 14th, 2019 [5:21pm]
-# @Modified: September 25th, 2019 [7:05pm]
+# @Modified: October 1st, 2019 [12:52am]
 # @Version:  1.0.0
 #
 # Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
@@ -13,19 +13,20 @@
 EXE = quash
 
 ifeq ($(shell hostname | head -c5),cycle)
-CXXSTD = -std=c++1z
+CC=clang-5.0
+CXX=clang++-5.0
 else
-CXXSTD = -std=c++17
-endif
-
 CC=clang
 CXX=clang++
+endif
+
 CCSTD = -std=c11
+CXXSTD = -std=c++2a
 CFLAGS = -O3 -g -DNDEBUG
 CXXFLAGS = -O3 -g -DNDEBUG
 WARNING_FLAGS = -Wall -Wextra -Wpedantic
 WARNING_FLAGS_GCC =
-WARNING_FLAGS_CLANG = -Weverything -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-padded -Wno-date-time
+WARNING_FLAGS_CLANG = -Weverything -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-padded -Wno-date-time -Wno-exit-time-destructors -Wno-global-constructors
 
 MACOS_FLAGS =
 LINUX_FLAGS = -pthread

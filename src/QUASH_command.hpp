@@ -7,22 +7,21 @@ Should utilize fork() and exec()
 #ifndef COMMAND_HPP
 #define COMMAND_HPP
 
-#include "QUASH_public.hpp"
 #include <string>
 
+#include "QUASH_public.hpp"
 
-namespace QUASH{
-  class Command{
+
+namespace QUASH {
+  class Command {
   public:
     Command();
     ~Command();
 
     uint8_t findExecutable(std::string exeName);
 
-    uint8_t runExecutable(); //Probably needs more parameters
-
-
+    uint8_t runExecutable();  //Probably needs more parameters
   };
 
-}
+}  // namespace QUASH
 #endif
