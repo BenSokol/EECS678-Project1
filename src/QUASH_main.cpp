@@ -21,6 +21,7 @@
 #include "QUASH_ps1.hpp"
 #include "QUASH_public.hpp"
 #include "QUASH_tokenizer.hpp"
+#include "QUASH_command.hpp"
 #include "UTL_colors.hpp"
 
 namespace QUASH {
@@ -63,6 +64,8 @@ namespace QUASH {
 
       // TODO: call out to (class) QUASH::command cmd with ret.second to run command
       //auto retCommand = Command::runCommand();
+      std::vector<std::string> ls;
+      //executable path string = Command::which(ls); Returns the path string to executable if found
 
       // TODO: uncomment, exit() should return true if "exit" or "quit" is run.
       // if (retCommand.first != STATUS_SUCCESS) {

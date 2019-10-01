@@ -14,12 +14,13 @@ Should utilize fork() and exec()
 namespace QUASH{
   class Command{
   public:
-    Command();
+    Command(std::map<std::string, std::string> mEnv);
     ~Command();
 
-    uint8_t findExecutable(std::string exeName);
+    std::map<std::string, std::string> path;
+    uint8_t findExecutable(std::vector<std::string> exeName); //Not needed?
 
-    uint8_t runExecutable(); //Probably needs more parameters
+    uint8_t runExecutable(std::string filePath, std::string exec); //Probably needs more parameters
 
 
   };
