@@ -11,7 +11,7 @@ namespace QUASH {
   Command::~Command() {
   }
 
-  uint8_t Command::findExecutable(std::string exeName) {
+  uint8_t Command::findExecutable(const std::string &exeName) {
     //Search the PATH and return (and run?) the executable if found
     //Determine which file to use: pwd? home?
     //Return success (0) if found

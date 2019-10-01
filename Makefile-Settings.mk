@@ -2,7 +2,7 @@
 # @Author:   Ben Sokol <Ben>
 # @Email:    ben@bensokol.com
 # @Created:  February 14th, 2019 [5:21pm]
-# @Modified: October 1st, 2019 [12:52am]
+# @Modified: October 1st, 2019 [3:27am]
 # @Version:  1.0.0
 #
 # Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
@@ -15,13 +15,10 @@ EXE = quash
 ifeq ($(shell hostname | head -c5),cycle)
 CC=clang-5.0
 CXX=clang++-5.0
-else
-CC=clang
-CXX=clang++
 endif
 
 CCSTD = -std=c11
-CXXSTD = -std=c++2a
+CXXSTD = -std=c++17
 CFLAGS = -O3 -g -DNDEBUG
 CXXFLAGS = -O3 -g -DNDEBUG
 WARNING_FLAGS = -Wall -Wextra -Wpedantic

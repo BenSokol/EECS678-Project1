@@ -20,25 +20,22 @@ notifications:
       - "Result: *%{result}*"
 matrix:
   include:
-  - name: Linux - Ubuntu - Xenial - GCC 5.4.0
-    os: linux
-    dist: xenial
-    compiler: gcc
   - name: linux - Ubuntu - Xenial - Clang 5.0.0
     os: linux
     dist: xenial
     compiler: clang
-    addons:
-      apt:
-        packages:
-          - clang-5.0
-        sources:
-          - ubuntu-toolchain-r-test
-          - llvm-toolchain-trusty-5.0
-          - sourceline: 'deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-5.0 main'
-            key_url: 'https://apt.llvm.org/llvm-snapshot.gpg.key'
+    sudo: required
+    before_install:
+    - wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
+    - sudo apt-add-repository "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-5.0 main"
+    - sudo apt-get update
+    - sudo apt-get install -y clang-5.0 lld-5.0
     env:
-    - MATRIX_EVAL="CC=clang-5.0 && CXX=clang-5.0"
+    - MATRIX_EVAL="CC=clang-5.0 && CXX=clang++-5.0"
+    script:
+    - make var CC=clang-5.0 CXX=clang++-5.0
+    - make CC=clang-5.0 CXX=clang++-5.0
+    - make test CC=clang-5.0 CXX=clang++-5.0
   - name: Linux - Ubuntu - Bionic - GCC 7.4.0
     os: linux
     dist: bionic
@@ -50,11 +47,17 @@ matrix:
   - name: macOS - 10.14 - xcode11 - clang 8.0.0
     os: osx
     osx_image: xcode11
+    compiler: clang
   - name: macOS - 10.14 - xcode11 - GCC 9.2.0
     os: osx
+    compiler: gcc
     osx_image: xcode11
     env:
     - MATRIX_EVAL="brew link gcc && CC=gcc-9 && CXX=g++-9"
+    script:
+    - make var CC=gcc-9 CXX=g++-9
+    - make CC=gcc-9 CXX=g++-9
+    - make test CC=gcc-9 CXX=g++-9
   - name: Linux - Ubuntu - Bionic - cppcheck
     os: linux
     dist: bionic
