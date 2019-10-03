@@ -3,33 +3,33 @@
 * @Author:   Ben Sokol <Ben>
 * @Email:    ben@bensokol.com
 * @Created:  September 23rd, 2019 [8:00pm]
-* @Modified: October 1st, 2019 [2:41am]
+* @Modified: October 2nd, 2019 [10:42pm]
 * @Version:  1.0.0
 *
 * Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
 */
 
-#include <cstdint>
-#include <cstdlib>
-#include <fstream>
-#include <iostream>
-#include <map>
-#include <string>
+#include <cstdint>  // uint8_t
 
-#include <unistd.h>
+#include <iostream>  // std::cout
+#include <map>       // std::map
+#include <string>    // std::string
 
 #include "QUASH_main.hpp"
 
-#include "DBG_print.hpp"
-#include "QUASH_ps1.hpp"
-#include "QUASH_public.hpp"
-#include "QUASH_tokenizer.hpp"
-#include "UTL_assert.h"
-#include "UTL_colors.hpp"
+#include "DBG_out.hpp"          // DBG::out::instance(), DBG_print, etc.
+#include "QUASH_hostname.hpp"   // QUASH::COMMANDS::hostname()
+#include "QUASH_ps1.hpp"        // QUASH::COMMANDS::ps1()
+#include "QUASH_public.hpp"     // QUASH::STATUS_CODES
+#include "QUASH_pwd.hpp"        // QUASH::COMMANDS::pwd()
+#include "QUASH_tokenizer.hpp"  // QUASH::Tokenizer()
+#include "QUASH_whoami.hpp"     // QUASH::COMMANDS::whoami()
+#include "UTL_colors.hpp"       // UTL::COLORS::FG::red, etc.
 
 namespace QUASH {
   main::main(const int argc, const char *const *const argv, const char *const *const envp) :
-    mPrintEnv(false), mDisplayUsage(false), mStatus(STATUS_SUCCESS) {
+      mPrintEnv(false), mDisplayUsage(false), mStatus(STATUS_SUCCESS) {
+    DBG_print("Starting Quash Initialization\n", "");
     if (mStatus == STATUS_SUCCESS) {
       preInit();
       if (mStatus == STATUS_SUCCESS) {
@@ -38,6 +38,17 @@ namespace QUASH {
           initEnv(envp);
           if (mStatus == STATUS_SUCCESS) {
             postInit();
+            if (mStatus == STATUS_SUCCESS) {
+              DBG_print("Finished Quash Initialization\n");
+              if (DBG::out::instance().enabled()) {
+                DBG_print("Debug Information:\n");
+                DBG_print("HOME     = ", mEnv["HOME"], "\n");
+                DBG_print("HOSTNAME = ", QUASH::COMMANDS::hostname(), "\n");
+                DBG_print("PATH     = ", mEnv["PATH"], "\n");
+                DBG_print("PWD      = ", QUASH::COMMANDS::pwd(), "\n");
+                DBG_print("USERNAME = ", QUASH::COMMANDS::whoami(), "\n");
+              }
+            }
           }
         }
       }
@@ -46,6 +57,7 @@ namespace QUASH {
 
 
   main::~main() {
+    DBG::out::instance().wait();
   }
 
 
@@ -56,11 +68,17 @@ namespace QUASH {
     }
 
     if (mPrintEnv) {
+      DBG_print("Printing environment variables\n");
       printEnv();
     }
 
+    DBG_print("Starting Quash...\n");
+
     while (true) {
       // Prints PS1
+      if (DBG::out::instance().enabled()) {
+        DBG::out::instance().wait();
+      }
       std::cout << COMMANDS::ps1();
 
       // Gets input from user
@@ -68,6 +86,7 @@ namespace QUASH {
 
       // Detects if CTRL-D (EOF) has been entered. If so, exits program.
       if (std::cin.eof()) {
+        DBG_print("EOF has been detected, exiting...\n");
         break;
       }
 
@@ -101,25 +120,36 @@ namespace QUASH {
       // }
     }
 
+    DBG_print("Exiting Quash...\n");
+
     return mStatus;
+  }
+
+  std::string main::getInput() {
+    std::string inputString;
+    std::getline(std::cin, inputString);
+    return inputString;
   }
 
 
   void main::initArgs(const int argc, const char *const *const argv) {
-    [[maybe_unused]] std::string str = "";
     if (argc > 1) {
+      bool debug_mode = false;
+      std::string str = "";
+
       for (int i = 1; i < argc; ++i) {
         if (mCmdFlags.count(argv[i])) {
           switch (mCmdFlags[argv[i]]) {
             case QUASH_FLAG_HELP:
               // Help (-h, --help)
               mDisplayUsage = true;
+              DBG_print("Found help flag...\n");
               break;
 
             case QUASH_FLAG_DEBUG:
               // Debug Mode (-d, --debug)
-              DBG::print.enable();
-              DBG::print << "Debug Mode Enabled\n";
+              debug_mode = true;
+              DBG_print("Debug Mode Enabled\n");
               break;
 
             case QUASH_FLAG_DEBUG_FILE:
@@ -137,18 +167,20 @@ namespace QUASH {
                 mStatus = STATUS_INIT_INVALID_COMMAND_LINE_PARAMETER;
                 return;
               }
-              std::cout << __LINE__ << "\n" << std::flush;
-              if (!DBG::print.open(str)) {
+
+              DBG_print("Using \'", "\' as debug ofstream\n");
+
+              if (!DBG::out::instance().openOFS(str)) {
                 std::cerr << "Warning: Unable to open\'" << argv[i] << "\'\n";
               }
-              DBG::print << "Debug file = " << str << "\n";
-              DBG_print_tsf << "test\n";
+
+              DBG_print("Found debug-file flag, \n");
               i++;
               break;
 
             case QUASH_FLAG_DEBUG_NO_STDERR:
               // Debug Mode (--debug-no-stderr)
-              DBG::print.popOS(std::cerr);
+              DBG::out::instance().osDisable();
               break;
 
             case QUASH_FLAG_PRINT_ENV:
@@ -162,6 +194,8 @@ namespace QUASH {
           mStatus = STATUS_INIT_UNKNOWN_COMMAND_LINE_PARAMETER;
         }
       }
+
+      DBG::out::instance().enable(debug_mode);
     }
   }
 
@@ -197,9 +231,7 @@ namespace QUASH {
 
   void main::printEnv() const {
     for (auto &env : mEnv) {
-      std::cout << env.first << " = "
-                << "TODO"
-                << "\n";
+      std::cout << env.first << " = " << env.second << "\n";
     }
   }
 

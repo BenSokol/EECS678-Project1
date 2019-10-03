@@ -4,24 +4,27 @@ Should search PATH until the executable specified is found
 Should utilize fork() and exec()
 
 */
-#ifndef COMMAND_HPP
-#define COMMAND_HPP
 
-#include <string>
+#ifndef QUASH_COMMAND_HPP
+#define QUASH_COMMAND_HPP
 
-#include "QUASH_public.hpp"
-
+#include <map>     // std::map
+#include <string>  // std::string
 
 namespace QUASH {
   class Command {
   public:
-    Command(std::map<std::string, std::string> mEnv);
+    explicit Command(const std::map<std::string, std::string> &aEnv);
     ~Command();
 
     uint8_t findExecutable(const std::string &exeName);
 
     uint8_t runExecutable();  //Probably needs more parameters
+
+  private:
+    std::map<std::string, std::string> mEnv;
   };
 
 }  // namespace QUASH
+
 #endif

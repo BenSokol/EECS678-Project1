@@ -3,21 +3,23 @@
 * @Author:   Ben Sokol <Ben>
 * @Email:    ben@bensokol.com
 * @Created:  August 28th, 2019 [4:56pm]
-* @Modified: October 1st, 2019 [2:41am]
+* @Modified: October 2nd, 2019 [10:28pm]
 * @Version:  1.0.0
 *
 * Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
 */
 
-#include <iomanip>
-#include <iostream>
-#include <string>
-#include <vector>
+#include <cstdint>  // uint8_t
+
+#include <iomanip>   // std::setfill, std::setw
+#include <iostream>  // std::cout
+#include <string>    // std::string
+#include <utility>   // std::pair
+#include <vector>    // std::vector
 
 #include "QUASH_tokenizer.hpp"
 
-#include "QUASH_public.hpp"
-#include "UTL_assert.h"
+#include "QUASH_public.hpp"  // QUASH::STATUS_CODES
 
 namespace QUASH {
   Tokenizer::Tokenizer() {

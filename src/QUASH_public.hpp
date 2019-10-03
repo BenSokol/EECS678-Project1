@@ -3,16 +3,18 @@
 * @Author:   Ben Sokol <Ben>
 * @Email:    ben@bensokol.com
 * @Created:  September 23rd, 2019 [7:20pm]
-* @Modified: October 1st, 2019 [2:04am]
+* @Modified: October 2nd, 2019 [10:26pm]
 * @Version:  1.0.0
 *
 * Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
 */
 
-#include <cstdint>
-#include <limits>
-#include <map>
-#include <string>
+#ifndef QUASH_PUBLIC_HPP
+#define QUASH_PUBLIC_HPP
+
+#include <cstdint>  // uint8_t
+
+#include <limits>  // std::numeric_limits
 
 namespace QUASH {
   typedef enum STATUS_CODES : uint8_t {
@@ -34,5 +36,7 @@ namespace QUASH {
     STATUS_UNKNOWN = std::numeric_limits<uint8_t>::max(),
   } STATUS;
 
-  std::string getInput();
+
 }  // namespace QUASH
+
+#endif
