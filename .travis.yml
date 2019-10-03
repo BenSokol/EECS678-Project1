@@ -18,62 +18,84 @@ notifications:
       - "Commit (<%{compare_url}|%{commit}>) by *%{author}* with subject _%{commit_subject}_"
       - "Build (<%{build_url}|#%{build_number}>) took *%{duration}*"
       - "Result: *%{result}*"
+
 matrix:
   include:
-  - name: linux - Ubuntu - Xenial - Clang 5.0.0
-    os: linux
-    dist: xenial
-    compiler: clang
-    sudo: required
-    before_install:
-    - wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-    - sudo apt-add-repository "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-5.0 main"
-    - sudo apt-get update
-    - sudo apt-get install -y clang-5.0 lld-5.0
-    env:
-    - MATRIX_EVAL="CC=clang-5.0 && CXX=clang++-5.0"
-    script:
-    - make var CC=clang-5.0 CXX=clang++-5.0
-    - make CC=clang-5.0 CXX=clang++-5.0
-    - make test CC=clang-5.0 CXX=clang++-5.0
-  - name: Linux - Ubuntu - Bionic - GCC 7.4.0
-    os: linux
-    dist: bionic
-    compiler: gcc
-  - name: Linux - Ubuntu - Bionic - Clang 7.0.0
-    os: linux
-    dist: bionic
-    compiler: clang
-  - name: macOS - 10.14 - xcode11 - clang 8.0.0
-    os: osx
-    osx_image: xcode11
-    compiler: clang
-  - name: macOS - 10.14 - xcode11 - GCC 9.2.0
-    os: osx
-    compiler: gcc
-    osx_image: xcode11
-    env:
-    - MATRIX_EVAL="brew link gcc && CC=gcc-9 && CXX=g++-9"
-    script:
-    - make var CC=gcc-9 CXX=g++-9
-    - make CC=gcc-9 CXX=g++-9
-    - make test CC=gcc-9 CXX=g++-9
-  - name: Linux - Ubuntu - Bionic - cppcheck
-    os: linux
-    dist: bionic
-    compiler: gcc
-    addons:
-      apt:
-        sources:
-        - ubuntu-toolchain-r-test
-        packages:
-        - cppcheck
-    script:
-    - make var
-    - make cppcheck
+    - name: Linux - Ubuntu - Bionic - GCC 9.2.0
+      os: linux
+      dist: bionic
+      compiler: gcc
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-9
+      env:
+        - MATRIX_EVAL="CC=gcc-9 && CXX=g++-9"
+      script:
+        - make var CC=gcc-9 CXX=g++-9
+        - make CC=gcc-9 CXX=g++-9
+        - make test CC=gcc-9 CXX=g++-9
+
+    - name: Linux - Ubuntu - Bionic - Clang 9.0.0
+      os: linux
+      dist: bionic
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-bionic-9
+          packages:
+            - clang-9
+            - libstdc++-9-dev
+      env:
+        - MATRIX_EVAL="CC=clang-9 && CXX=clang++-9"
+      script:
+        - make var CC=clang-9 CXX=clang++-9
+        - make CC=clang-9 CXX=clang++-9
+        - make test CC=clang-9 CXX=clang++-9
+
+    - name: macOS - 10.14 - xcode11 - clang 9.0.0
+      os: osx
+      osx_image: xcode11
+      compiler: clang
+      env:
+        - MATRIX_EVAL="brew install llvm && brew link llvm && export PATH='/usr/local/Cellar/llvm/9.0.0/bin/:$PATH' && CC=clang && CXX=clang++"
+      script:
+        - make var CC=clang CXX=clang++ CFLAGS="-I/usr/local/Cellar/llvm/9.0.0/include -L/usr/local/Cellar/llvm/9.0.0/lib" CXXFLAGS="-I/usr/local/Cellar/llvm/9.0.0/include -L/usr/local/Cellar/llvm/9.0.0/lib"
+        - make CC=clang CXX=clang++ CFLAGS="-I/usr/local/Cellar/llvm/9.0.0/include -L/usr/local/Cellar/llvm/9.0.0/lib" CXXFLAGS="-I/usr/local/Cellar/llvm/9.0.0/include -L/usr/local/Cellar/llvm/9.0.0/lib"
+        - make test CC=clang CXX=clang++ CFLAGS="-I/usr/local/Cellar/llvm/9.0.0/include -L/usr/local/Cellar/llvm/9.0.0/lib" CXXFLAGS="-I/usr/local/Cellar/llvm/9.0.0/include -L/usr/local/Cellar/llvm/9.0.0/lib"
+
+    - name: macOS - 10.14 - xcode11 - GCC 9.2.0
+      os: osx
+      compiler: gcc
+      osx_image: xcode11
+      env:
+        - MATRIX_EVAL="brew link gcc && CC=gcc-9 && CXX=g++-9"
+      script:
+        - make var CC=gcc-9 CXX=g++-9
+        - make CC=gcc-9 CXX=g++-9
+        - make test CC=gcc-9 CXX=g++-9
+
+    - name: Linux - Ubuntu - Bionic - cppcheck
+      os: linux
+      dist: bionic
+      compiler: gcc
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - cppcheck
+      script:
+        - make var
+        - make cppcheck
+
 before_install:
-- eval "${MATRIX_EVAL}"
+  - eval "${MATRIX_EVAL}"
+
 script:
-- make var
-- make
-- make test
+  - make var
+  - make
+  - make test
