@@ -28,8 +28,9 @@ matrix:
       addons:
         apt:
           sources:
-            - ubuntu-toolchain-r-test
+            - ubuntu-toolchain-r/test
           packages:
+            - gcc-9
             - g++-9
       env:
         - MATRIX_EVAL="CC=gcc-9 && CXX=g++-9"
@@ -37,35 +38,6 @@ matrix:
         - make var CC=gcc-9 CXX=g++-9
         - make CC=gcc-9 CXX=g++-9
         - make test CC=gcc-9 CXX=g++-9
-
-    - name: Linux - Ubuntu - Bionic - Clang 9.0.0
-      os: linux
-      dist: bionic
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-            - llvm-toolchain-bionic-9
-          packages:
-            - clang-9
-            - libstdc++-9-dev
-      env:
-        - MATRIX_EVAL="CC=clang-9 && CXX=clang++-9"
-      script:
-        - make var CC=clang-9 CXX=clang++-9
-        - make CC=clang-9 CXX=clang++-9
-        - make test CC=clang-9 CXX=clang++-9
-
-    - name: macOS - 10.14 - xcode11 - clang 9.0.0
-      os: osx
-      osx_image: xcode11
-      compiler: clang
-      env:
-        - MATRIX_EVAL="brew install llvm && brew link llvm && export PATH='/usr/local/Cellar/llvm/9.0.0/bin/:$PATH' && CC=clang && CXX=clang++"
-      script:
-        - make var CC=clang CXX=clang++ CFLAGS="-I/usr/local/Cellar/llvm/9.0.0/include -L/usr/local/Cellar/llvm/9.0.0/lib" CXXFLAGS="-I/usr/local/Cellar/llvm/9.0.0/include -L/usr/local/Cellar/llvm/9.0.0/lib"
-        - make CC=clang CXX=clang++ CFLAGS="-I/usr/local/Cellar/llvm/9.0.0/include -L/usr/local/Cellar/llvm/9.0.0/lib" CXXFLAGS="-I/usr/local/Cellar/llvm/9.0.0/include -L/usr/local/Cellar/llvm/9.0.0/lib"
-        - make test CC=clang CXX=clang++ CFLAGS="-I/usr/local/Cellar/llvm/9.0.0/include -L/usr/local/Cellar/llvm/9.0.0/lib" CXXFLAGS="-I/usr/local/Cellar/llvm/9.0.0/include -L/usr/local/Cellar/llvm/9.0.0/lib"
 
     - name: macOS - 10.14 - xcode11 - GCC 9.2.0
       os: osx
