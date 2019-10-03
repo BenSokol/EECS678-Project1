@@ -21,13 +21,28 @@ notifications:
 
 matrix:
   include:
+    - name: Linux - Ubuntu - Xenial - GCC 9.2.0
+      os: linux
+      dist: xenial
+      compiler: gcc
+      before_install:
+        - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
+        - sudo apt-get update -q
+        - sudo apt-get install gcc-9 g++-9 -y
+      env:
+        - MATRIX_EVAL="CC=gcc-9 && CXX=g++-9"
+      script:
+        - make var CC=gcc-9 CXX=g++-9
+        - make CC=gcc-9 CXX=g++-9
+        - make test CC=gcc-9 CXX=g++-9
+
     - name: Linux - Ubuntu - Bionic - GCC 9.2.0
       os: linux
       dist: bionic
       compiler: gcc
       before_install:
         - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
-        - sudo apt-get update -q 
+        - sudo apt-get update -q
         - sudo apt-get install gcc-9 g++-9 -y
       env:
         - MATRIX_EVAL="CC=gcc-9 && CXX=g++-9"
