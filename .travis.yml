@@ -25,13 +25,10 @@ matrix:
       os: linux
       dist: bionic
       compiler: gcc
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r/test
-          packages:
-            - gcc-9
-            - g++-9
+      before_install:
+        - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
+        - sudo apt-get update -q 
+        - sudo apt-get install gcc-9 g++-9 -y
       env:
         - MATRIX_EVAL="CC=gcc-9 && CXX=g++-9"
       script:
