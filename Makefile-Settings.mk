@@ -2,7 +2,7 @@
 # @Author:   Ben Sokol <Ben>
 # @Email:    ben@bensokol.com
 # @Created:  February 14th, 2019 [5:21pm]
-# @Modified: October 2nd, 2019 [9:53pm]
+# @Modified: October 2nd, 2019 [11:01pm]
 # @Version:  1.0.0
 #
 # Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
@@ -15,8 +15,8 @@ EXE = quash
 ifeq ($(shell hostname | head -c5),cycle)
 CC=/home/b843s521/gcc-9.2.0/bin/gcc-9.2
 CXX=/home/b843s521/gcc-9.2.0/bin/g++-9.2
-CFLAGS += -I/home/b843s521/gcc-9.2.0/include -L/home/b843s521/gcc-9.2.0/lib
-CXXFLAGS += -I/home/b843s521/gcc-9.2.0/include -L/home/b843s521/gcc-9.2.0/lib
+CFLAGS += -I/home/b843s521/gcc-9.2.0/include -L/home/b843s521/gcc-9.2.0/lib -static-libstdc++
+CXXFLAGS += -I/home/b843s521/gcc-9.2.0/include -L/home/b843s521/gcc-9.2.0/lib -static-libstdc++
 endif
 
 ifeq ($(shell hostname),Defiant)
