@@ -83,15 +83,16 @@ namespace QUASH {
       }
 
       // TODO: Check if any async processes finished
-    /*
-     for(int i = 0; i < mProcesses.size(); ++i)
-      {
-        if(mProcesses[i].done == true)
+      /*
+       for(int i = 0; i < mProcesses.size(); ++i)
         {
-          mProcesses.erase(mProcesses.at(i));
+          if(mProcesses[i].done == true)
+          {
+            std::cout << mProcesses.pid << " Done.\n";
+            mProcesses.erase(mProcesses.at(i));
+          }
         }
-      }
-      */
+        */
 
       // Prints PS1
       std::cout << COMMANDS::ps1();
@@ -125,11 +126,12 @@ namespace QUASH {
         {
           if(mProcesses[i].done == true)
           {
+            std::cout << mProcesses.pid << " Done.\n";
             mProcesses.erase(mProcesses.at(i));
           }
         }
         */
-        
+
       // ================================
       // TODO: Goal for stage 1
       // system("ls -lha /bin");
