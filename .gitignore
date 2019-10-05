@@ -4,3 +4,4 @@ quash
 prog
 dep/
 obj/
+logs/

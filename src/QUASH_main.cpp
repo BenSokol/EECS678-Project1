@@ -3,7 +3,7 @@
 * @Author:   Ben Sokol <Ben>
 * @Email:    ben@bensokol.com
 * @Created:  September 23rd, 2019 [8:00pm]
-* @Modified: October 2nd, 2019 [10:42pm]
+* @Modified: October 4th, 2019 [6:20pm]
 * @Version:  1.0.0
 *
 * Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
@@ -11,6 +11,7 @@
 
 #include <cstdint>  // uint8_t
 
+#include <deque>
 #include <iostream>  // std::cout
 #include <map>       // std::map
 #include <string>    // std::string
@@ -57,7 +58,9 @@ namespace QUASH {
 
 
   main::~main() {
-    DBG::out::instance().wait();
+    if (DBG::out::instance().enabled()) {
+      DBG::out::instance().wait();
+    }
   }
 
 
@@ -75,10 +78,13 @@ namespace QUASH {
     DBG_print("Starting Quash...\n");
 
     while (true) {
-      // Prints PS1
       if (DBG::out::instance().enabled()) {
         DBG::out::instance().wait();
       }
+
+      // TODO: Check if any async processes finished
+
+      // Prints PS1
       std::cout << COMMANDS::ps1();
 
       // Gets input from user
@@ -86,6 +92,7 @@ namespace QUASH {
 
       // Detects if CTRL-D (EOF) has been entered. If so, exits program.
       if (std::cin.eof()) {
+        DBG_write(false, false, true, false, "\n");
         DBG_print("EOF has been detected, exiting...\n");
         break;
       }
@@ -93,17 +100,46 @@ namespace QUASH {
       // Tokenize input string
       auto retTokenizer = Tokenizer::Tokenize(input_string);
 
-      // TODO: IF DEBUG Print tokens from tokenizer
-      // Tokenizer::print(ret.second);
-
+      // Handle status from tokenize
       if (retTokenizer.first != STATUS_SUCCESS) {
         // Handle error from Tokenize;
       }
 
-      // TODO: call out to (class) QUASH::command cmd with ret.second to run command
-      //auto retCommand = Command::runCommand();
-      std::vector<std::string> ls;
-      //executable path string = Command::which(ls); Returns the path string to executable if found
+      // DEBUG: Print tokenized string
+      if (DBG::out::instance().enabled()) {
+        Tokenizer::print(retTokenizer.second);
+      }
+
+      // TODO: Check if any async processes finished
+
+      // ================================
+      // TODO: Goal for stage 1
+      // system("ls -lha /bin");
+      // ================================
+
+      // Can assume (hard code if needed) ls is at /bin/ls will find using QUASH::which when complete
+      process *p = new process({ "ls", "-lha", "/bin" });
+
+      while (!p->initDone) {
+        std::this_thread::yield();
+      }
+
+      if (p->status != STATUS_SUCCESS) {
+        // TODO: Handle
+      }
+
+      // Add process to vector of processes
+      mProcesses.push_back(p);
+
+      // start process
+      p->start();
+
+      // Wait for process to finish if not async
+      if (!p->async) {
+        while (!p->done) {
+          std::this_thread::yield();
+        }
+      }
 
       // TODO: uncomment, exit() should return true if "exit" or "quit" is run.
       // if (retCommand.first != STATUS_SUCCESS) {
@@ -125,6 +161,31 @@ namespace QUASH {
     return mStatus;
   }
 
+  // uint8_t main::runCommand(process &p) {
+  //   std::vector<const char *> args;
+  //   bool hasPipe = false;
+  //   for (size_t i = 0; i < p.args.size(); ++i) {
+  //     if (p.args[i].compare("|")) {
+  //       hasPipe = true;
+  //       break;
+  //     }
+  //     args.push_back(p.args[i].c_str());
+  //   }
+  //   args.push_back(nullptr);
+  //
+  //   p.initDone = true;
+  //
+  //   if (hasPipe) {
+  //     std::deque<std::string> postPipe;
+  //     std::move(p.args.begin() + hasPipe, p.args.end(), postPipe.begin());
+  //   }
+  //   else {
+  //     // call fork/exec using
+  //     // args.data() will return char * const*
+  //   }
+  // }
+
+
   std::string main::getInput() {
     std::string inputString;
     std::getline(std::cin, inputString);
@@ -134,7 +195,8 @@ namespace QUASH {
 
   void main::initArgs(const int argc, const char *const *const argv) {
     if (argc > 1) {
-      bool debug_mode = false;
+      bool debug_os = false;
+      bool debug_ofs = false;
       std::string str = "";
 
       for (int i = 1; i < argc; ++i) {
@@ -148,39 +210,21 @@ namespace QUASH {
 
             case QUASH_FLAG_DEBUG:
               // Debug Mode (-d, --debug)
-              debug_mode = true;
-              DBG_print("Debug Mode Enabled\n");
+              DBG_print("Debug Mode - Enabled\n");
+              debug_os = true;
+              debug_ofs = true;
               break;
 
             case QUASH_FLAG_DEBUG_FILE:
-              // Debug Mode (--debug-file <filename>)
-              if ((i + 1) == argc || mCmdFlags.count(str)) {
-                std::cerr << "ERROR: Missing command line argument. Expected --debug-file <filename>\n";
-                mStatus = STATUS_INIT_MISSING_COMMAND_LINE_PARAMETER;
-                return;
-              }
-
-              str = std::string(argv[i + 1]);
-
-              if (str.empty()) {
-                std::cerr << "ERROR: Unknown command line argument \'" << argv[i] << "\'\n";
-                mStatus = STATUS_INIT_INVALID_COMMAND_LINE_PARAMETER;
-                return;
-              }
-
-              DBG_print("Using \'", "\' as debug ofstream\n");
-
-              if (!DBG::out::instance().openOFS(str)) {
-                std::cerr << "Warning: Unable to open\'" << argv[i] << "\'\n";
-              }
-
-              DBG_print("Found debug-file flag, \n");
-              i++;
+              // Debug Mode (--debug-no-file)
+              DBG_print("Enabled output to file\n");
+              debug_ofs = true;
               break;
 
-            case QUASH_FLAG_DEBUG_NO_STDERR:
+            case QUASH_FLAG_DEBUG_STDERR:
               // Debug Mode (--debug-no-stderr)
-              DBG::out::instance().osDisable();
+              DBG_print("Enabled output to stderr\n");
+              debug_os = true;
               break;
 
             case QUASH_FLAG_PRINT_ENV:
@@ -195,7 +239,14 @@ namespace QUASH {
         }
       }
 
-      DBG::out::instance().enable(debug_mode);
+      DBG::out::instance().ofsEnable(debug_ofs);
+      DBG::out::instance().osEnable(debug_os);
+      DBG::out::instance().enable(debug_os || debug_ofs);
+
+      // Shutdown debug module if not needed
+      if (!debug_os && !debug_ofs) {
+        DBG::out::instance().shutdown();
+      }
     }
   }
 
@@ -221,10 +272,16 @@ namespace QUASH {
   void main::preInit() {
     mCmdFlags["-h"] = QUASH_FLAG_HELP;
     mCmdFlags["--help"] = QUASH_FLAG_HELP;
+
     mCmdFlags["-d"] = QUASH_FLAG_DEBUG;
     mCmdFlags["--debug"] = QUASH_FLAG_DEBUG;
+
+    mCmdFlags["-df"] = QUASH_FLAG_DEBUG_FILE;
     mCmdFlags["--debug-file"] = QUASH_FLAG_DEBUG_FILE;
-    mCmdFlags["--debug-no-stderr"] = QUASH_FLAG_DEBUG_NO_STDERR;
+
+    mCmdFlags["-de"] = QUASH_FLAG_DEBUG_STDERR;
+    mCmdFlags["--debug-stderr"] = QUASH_FLAG_DEBUG_STDERR;
+
     mCmdFlags["--print-env"] = QUASH_FLAG_PRINT_ENV;
   }
 
