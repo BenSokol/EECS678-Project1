@@ -36,13 +36,15 @@ namespace QUASH {
         // Should set default values of status, async, initDone, done
         // check for async
         /*
-        status = ?
+        status = 0;
+        async = 0;
         done = false;
 
         for(int i = 0; i < _args.size(); i++)
         {
           if(_args[i] == "&")
           {
+            async = 1;
             initDone = true;
             break;
           }
@@ -72,6 +74,11 @@ namespace QUASH {
         //     Possible extra commands: alias, unalias
         //   I/O Redirection >/</>>/<<
         // Should fork/exec call
+
+
+        //std::string execName = args[0]; //grabs the main exec name
+        //std::string location = QUASH::which(execName);
+
       }
 
       void start() {
