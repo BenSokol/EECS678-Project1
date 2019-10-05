@@ -35,6 +35,22 @@ namespace QUASH {
       process(const std::deque<std::string> _args) : args(_args) {
         // Should set default values of status, async, initDone, done
         // check for async
+        /*
+        done = false;
+        for(int i = 0; i < _args.size(); i++)
+        {
+          if(_args[i] == "&")
+          {
+            initDone = true;
+            break;
+          }
+          else
+          {
+            initDone = false;
+          }
+        }
+        */
+
       }
 
       ~process() {
