@@ -36,7 +36,9 @@ namespace QUASH {
         // Should set default values of status, async, initDone, done
         // check for async
         /*
+        status = ?
         done = false;
+
         for(int i = 0; i < _args.size(); i++)
         {
           if(_args[i] == "&")

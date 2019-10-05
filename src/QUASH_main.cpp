@@ -88,7 +88,7 @@ namespace QUASH {
         {
           if(mProcesses[i].done == true)
           {
-            std::cout << mProcesses.pid << " Done.\n";
+            std::cout << mProcesses[i].pid << " Done.\n";
             mProcesses.erase(mProcesses.at(i));
           }
         }
@@ -126,7 +126,7 @@ namespace QUASH {
         {
           if(mProcesses[i].done == true)
           {
-            std::cout << mProcesses.pid << " Done.\n";
+            std::cout << mProcesses[i].pid << " Done.\n";
             mProcesses.erase(mProcesses.at(i));
           }
         }
