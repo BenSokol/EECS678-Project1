@@ -2,7 +2,7 @@
 # @Author:   Ben Sokol <Ben>
 # @Email:    ben@bensokol.com
 # @Created:  February 14th, 2019 [5:21pm]
-# @Modified: October 2nd, 2019 [11:01pm]
+# @Modified: October 4th, 2019 [5:41pm]
 # @Version:  1.0.0
 #
 # Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
@@ -22,8 +22,6 @@ endif
 ifeq ($(shell hostname),Defiant)
 CC=gcc-9
 CXX=g++-9
-CFLAGS += -I/usr/local/Cellar/llvm/9.0.0/include -L/usr/local/Cellar/llvm/9.0.0/lib
-CXXFLAGS += -I/usr/local/Cellar/llvm/9.0.0/include -L/usr/local/Cellar/llvm/9.0.0/lib
 endif
 
 CCSTD = -std=c11
@@ -38,6 +36,6 @@ MACOS_FLAGS +=
 LINUX_FLAGS += -pthread
 
 #CPPCHECK_DEFINES = -D__cplusplus -DENABLE_LOGGING
-CPPCHECK_SUPPRESS = --suppress=missingIncludeSystem --suppress=preprocessorErrorDirective:submodules/utilities/UTL_textWrap.cpp:18
+CPPCHECK_SUPPRESS = --suppress=missingIncludeSystem --suppress=preprocessorErrorDirective:submodules/utilities/UTL_textWrap.cpp:18 --suppress=preprocessorErrorDirective:submodules/debug/DBG_out.hpp:31
 CPPCHECK_FLAGS = -q --platform=native --error-exitcode=1 --force --std=c11 --std=c++14
 CPPCHECK_ENABLE = --enable=warning --enable=style --enable=missingInclude
