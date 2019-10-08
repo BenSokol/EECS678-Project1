@@ -3,7 +3,7 @@
 * @Author:   Ben Sokol <Ben>
 * @Email:    ben@bensokol.com
 * @Created:  September 23rd, 2019 [8:00pm]
-* @Modified: October 4th, 2019 [6:20pm]
+* @Modified: October 8th, 2019 [5:18am]
 * @Version:  1.0.0
 *
 * Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
@@ -13,6 +13,7 @@
 
 #include <deque>
 #include <iostream>  // std::cout
+#include <iterator>  // std::distance
 #include <map>       // std::map
 #include <string>    // std::string
 
@@ -64,7 +65,7 @@ namespace QUASH {
   }
 
 
-  uint8_t main::run() {
+  quash_status_t main::run() {
     if (mDisplayUsage || mStatus != STATUS_SUCCESS) {
       usage();
       return mStatus;
@@ -83,16 +84,7 @@ namespace QUASH {
       }
 
       // TODO: Check if any async processes finished
-      /*
-       for(int i = 0; i < mProcesses.size(); ++i)
-        {
-          if(mProcesses[i].done == true)
-          {
-            std::cout << mProcesses[i].pid << " Done.\n";
-            mProcesses.erase(mProcesses.at(i));
-          }
-        }
-        */
+      checkJobStatus();
 
       // Prints PS1
       std::cout << COMMANDS::ps1();
@@ -108,29 +100,36 @@ namespace QUASH {
       }
 
       // Tokenize input string
-      auto retTokenizer = Tokenizer::Tokenize(input_string);
+      std::pair<quash_status_t, std::deque<std::string> > retTokenizer = Tokenizer::Tokenize(input_string);
 
       // Handle status from tokenize
-      if (retTokenizer.first != STATUS_SUCCESS) {
-        // Handle error from Tokenize;
+      switch (retTokenizer.first) {
+        case STATUS_SUCCESS:
+          DBG_print("Tokenizer was successful\n");
+          break;
+        case STATUS_TOKENIZER_MISSING_CLOSE_SINGLE_QUOTE:
+          break;
+
+        case STATUS_TOKENIZER_MISSING_CLOSE_DOUBLE_QUOTE:
+          break;
+
+        default:
+          if (DBG::out::instance().enabled()) {
+            DBG::out::instance().wait();
+          }
+          std::cerr << "ERROR: Unknown error from Tokenizer. Exiting...\n";
+          exit(STATUS_UNKNOWN);
+          break;
+          // Handle error from Tokenize;
       }
 
       // DEBUG: Print tokenized string
       if (DBG::out::instance().enabled()) {
-        Tokenizer::print(retTokenizer.second);
+        DBG::out::instance().wait();
+        Tokenizer::print(retTokenizer.second, true, false);
       }
 
-      // TODO: Check if any async processes finished
-      /*
-       for(int i = 0; i < mProcesses.size(); ++i)
-        {
-          if(mProcesses[i].done == true)
-          {
-            std::cout << mProcesses[i].pid << " Done.\n";
-            mProcesses.erase(mProcesses.at(i));
-          }
-        }
-        */
+      checkJobStatus();
 
       // ================================
       // TODO: Goal for stage 1
@@ -138,28 +137,28 @@ namespace QUASH {
       // ================================
 
       // Can assume (hard code if needed) ls is at /bin/ls will find using QUASH::which when complete
-      process *p = new process({ "ls", "-lha", "/bin" });
+      // process *p = new process({ "ls", "-lha", "/bin" });
 
-      while (!p->initDone) {
-        std::this_thread::yield();
-      }
-
-      if (p->status != STATUS_SUCCESS) {
-        // TODO: Handle
-      }
+      // while (!p->initDone) {
+      //   std::this_thread::yield();
+      // }
+      //
+      // if (p->status != STATUS_SUCCESS) {
+      //   // TODO: Handle
+      // }
 
       // Add process to vector of processes
-      mProcesses.push_back(p);
+      // mProcesses.push_back(p);
 
       // start process
-      p->start();
+      // p->start();
 
       // Wait for process to finish if not async
-      if (!p->async) {
-        while (!p->done) {
-          std::this_thread::yield();
-        }
-      }
+      // if (!p->async) {
+      //   while (!p->done) {
+      //     std::this_thread::yield();
+      //   }
+      // }
 
       // TODO: uncomment, exit() should return true if "exit" or "quit" is run.
       // if (retCommand.first != STATUS_SUCCESS) {
@@ -204,6 +203,24 @@ namespace QUASH {
   //     // args.data() will return char * const*
   //   }
   // }
+
+
+  void main::checkJobStatus() {
+    bool debugWait = DBG::out::instance().enabled();
+    for (std::vector<process *>::iterator it = mProcesses.begin(); it != mProcesses.end(); ++it) {
+      if ((*it)->done == true) {
+        if (debugWait) {
+          DBG::out::instance().wait();
+          debugWait = false;
+        }
+        std::cout << "[" << std::distance(mProcesses.begin(), it) << "]\t" << (*it)->pid << "\tfinished";
+        QUASH::Tokenizer::print((*it)->tokens, false, true);
+        std::cout << "\n";
+        delete (*it);
+        mProcesses.erase(it);
+      }
+    }
+  }
 
 
   std::string main::getInput() {

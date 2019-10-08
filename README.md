@@ -4,13 +4,16 @@
 ## Project Specification
 The project specification is located [here](https://web.archive.org/web/20190925231148/http://www.ittc.ku.edu/~kulkarni/teaching/EECS678/projects/quash.pdf).
 
+## Feature status
+See [here](https://github.com/BenSokol/EECS678-Project1/blob/master/FEATURES.md).
+
 ## Requirements
-|             |          Required          |
-| ----------- | -------------------------- |
-| OS          | Linux<br>macOS             |
-| Compiler    | gcc >= 9<br>clang >= 9     |
-| C Version   | c11                        |
-| C++ Version | c++2a                      |
+|             |          Prefered          |          Required          |
+| ----------- | -------------------------- | -------------------------- |
+| OS          |                            | Linux<br>macOS             |
+| Compiler    | gcc >= 9<br>clang >= 9     | gcc >= 8<br>clang >= 7     |
+| C Version   |                            | c11                        |
+| C++ Version | c++2a                      | c++17                      |
 
 ## To compile
 ```bash
@@ -36,6 +39,7 @@ For compilation help, see [this](https://github.com/BenSokol/build-tools) page.
 ### Flags
 | Flag                  | Short Flag | Description                                                                                                                              |
 |:----------------------|:-----------|:-----------------------------------------------------------------------------------------------------------------------------------------|
+| --help                | -h         | Print help (usage) message and exit                                                                                                      |
 | --debug               | -d         | Enable debug mode - Additional output to std::cerr and logs/Log \time since epocH\>.log                                                  |
 | --debug-file          | -df        | Enable debug mode - Additional output to logs/Log \time since epocH\>.log                                                                |
 | --debug-stderr        | -de        | Enable debug mode - Additional output to std::cerr                                                                                       |
