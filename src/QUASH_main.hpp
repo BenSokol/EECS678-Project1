@@ -78,6 +78,21 @@ namespace QUASH {
 
         //std::string execName = args[0]; //grabs the main exec name
         //std::string location = QUASH::which(execName);
+        //int pipe_a[2]
+
+
+        /*
+
+          for(int i = 0; i < tokens.size(); i++)
+          {
+            if(tokens[i] == "|")
+            {
+              //Create new list of tokens from the tokens after the Pipe
+              pipe(pipe_a);
+              
+            }
+          }
+        */
       }
 
       void start() {
