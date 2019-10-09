@@ -88,9 +88,8 @@ namespace QUASH {
             {
               //Create new list of tokens from the tokens after the Pipe
               process* pipedProcess = new Process(newTokens, piped = true);
-              pipedProcess->start();
               //may need a new bool for process stating whether or not it is piped or not.
-              //this will allow it to take in an input from another process
+              //this should allow it to take in an input from another process
 
               break;
             }
@@ -103,13 +102,14 @@ namespace QUASH {
           }
 
           //put I/O redirection here?
-          execv(tokens[0]);
+          execv(tokens[0], arguments);
         */
       }
 
       /*
-      void pipeInputs(const std::deque<std::string> tokens, process* pipedProcess)
+      void pipeInputs(const std::deque<std::string> newTokens, process* pipedProcess)
       {
+        pipedProcess->start();
         pid_t pid_1;
         int dataPipe[2];
         pipe(dataPipe);
@@ -119,7 +119,7 @@ namespace QUASH {
           close(dataPipe[0]);
           dup2(dataPipe[1], output?);
 
-          //execute
+          execv(newTokens[1], arguments);
         }
       }
       */
