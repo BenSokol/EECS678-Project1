@@ -82,18 +82,47 @@ namespace QUASH {
 
 
         /*
-
           for(int i = 0; i < tokens.size(); i++)
           {
             if(tokens[i] == "|")
             {
               //Create new list of tokens from the tokens after the Pipe
-              pipe(pipe_a);
-              
+              process* pipedProcess = new Process(newTokens, piped = true);
+              pipedProcess->start();
+              //may need a new bool for process stating whether or not it is piped or not.
+              //this will allow it to take in an input from another process
+
+              break;
             }
           }
+
+          if(piped == true)
+          {
+            close(dataPipe[1]);
+            dup2(dataPipe[0], input?);
+          }
+
+          //put I/O redirection here?
+          execv(tokens[0]);
         */
       }
+
+      /*
+      void pipeInputs(const std::deque<std::string> tokens, process* pipedProcess)
+      {
+        pid_t pid_1;
+        int dataPipe[2];
+        pipe(dataPipe);
+        pid_1 = fork();
+        if(pid_1 == 0)
+        {
+          close(dataPipe[0]);
+          dup2(dataPipe[1], output?);
+
+          //execute
+        }
+      }
+      */
 
       void start() {
         if (async) {
@@ -112,6 +141,7 @@ namespace QUASH {
       std::thread thread;                    // Thread to use for run
       std::thread::id pid;                   // id of process
       const std::deque<std::string> tokens;  // arguments for process
+      //bool piped;                          // determines if the process is a piped one or not
     };
 
     void checkJobStatus();
