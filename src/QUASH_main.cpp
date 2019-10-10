@@ -3,7 +3,7 @@
 * @Author:   Ben Sokol <Ben>
 * @Email:    ben@bensokol.com
 * @Created:  September 23rd, 2019 [8:00pm]
-* @Modified: October 10th, 2019 [5:15pm]
+* @Modified: October 10th, 2019 [6:10pm]
 * @Version:  1.0.0
 *
 * Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
@@ -13,25 +13,26 @@
 #include <csignal>  // kill
 #include <cstdint>  // uint8_t
 
-#include <deque>
+#include <deque>     // std::deque
 #include <iostream>  // std::cout
 #include <iterator>  // std::distance
 #include <map>       // std::map
 #include <string>    // std::string
+#include <vector>    // std::vector
 
 #include "QUASH_main.hpp"
 
-#include "DBG_out.hpp"         // DBG::out::instance(), DBG_print, etc.
-#include "QUASH_hostname.hpp"  // QUASH::COMMANDS::hostname()
-#include "QUASH_process.hpp"
+#include "DBG_out.hpp"          // DBG::out::instance(), DBG_print, etc.
+#include "QUASH_hostname.hpp"   // QUASH::COMMANDS::hostname()
+#include "QUASH_process.hpp"    // QUASH::process
 #include "QUASH_ps1.hpp"        // QUASH::COMMANDS::ps1()
 #include "QUASH_public.hpp"     // QUASH::STATUS_CODES
 #include "QUASH_pwd.hpp"        // QUASH::COMMANDS::pwd()
 #include "QUASH_tokenizer.hpp"  // QUASH::Tokenizer()
 #include "QUASH_whoami.hpp"     // QUASH::COMMANDS::whoami()
-#include "UTL_assert.h"
-#include "UTL_colors.hpp"  // UTL::COLORS::FG::red, etc.
-#include "UTL_trim.hpp"    // UTL::trim
+#include "UTL_assert.h"         // UTL_assert(), UTL_assert_always()
+#include "UTL_colors.hpp"       // UTL::COLORS::FG::red, etc.
+#include "UTL_trim.hpp"         // UTL::trim
 
 namespace QUASH {
   main::main() : mPrintEnv(false), mDisplayUsage(false), mStatus(STATUS_SUCCESS) {
@@ -191,6 +192,9 @@ namespace QUASH {
       // DEBUG: Print tokenized string
       DBG_print("\n", Tokenizer::str(retTokenizer.second, false));
 
+      // Validate tokens semantically
+
+      // Check if any jobs are complete
       checkJobStatus();
 
       // ================================
@@ -210,7 +214,7 @@ namespace QUASH {
       // }
 
       // Add process to vector of processes
-      // mProcesses.push_back(p);
+      // QUASH::process::processes().push_back(p);
 
       // start process
       // p->start();
@@ -247,17 +251,20 @@ namespace QUASH {
 
   void main::checkJobStatus() {
     bool debugWait = DBG::out::instance().enabled();
-    for (std::vector<process *>::iterator it = mProcesses.begin(); it != mProcesses.end(); ++it) {
+    for (std::vector<process *>::iterator it = QUASH::process::processes().begin();
+         it != QUASH::process::processes().end();
+         ++it) {
       if ((*it)->done == true) {
         if (debugWait) {
           DBG::out::instance().wait();
           debugWait = false;
         }
-        std::cout << "[" << std::distance(mProcesses.begin(), it) << "]\t" << (*it)->pid << "\tfinished";
+        std::cout << "[" << std::distance(QUASH::process::processes().begin(), it) << "]\t" << (*it)->pid
+                  << "\tfinished";
         std::cout << QUASH::Tokenizer::str((*it)->tokens, true);
         std::cout << "\n";
         delete (*it);
-        mProcesses.erase(it);
+        QUASH::process::processes().erase(it);
       }
     }
   }
@@ -274,14 +281,13 @@ namespace QUASH {
     // DBG_write(false, false, true, false, "\n");
     DBG_print("CTRL-C detected\n");
 
-    QUASH::main *_this = &QUASH::main::instance();
-
     // Kill currently running process.
-    // Currently running process will always be last process in the mProcesses vector.
+    // Currently running process will always be last process in the QUASH::process::processes() vector.
     // Only kill it if it is running asynchronously.
-    if (!_this->mProcesses.empty() && _this->mProcesses.back()->async && (_this->mProcesses.back()->pid > 0)) {
-      DBG_print("Canceling ", QUASH::Tokenizer::str(_this->mProcesses.back()->tokens, true), "\n");
-      if (kill(_this->mProcesses.back()->pid, SIGINT)) {
+    if (!QUASH::process::processes().empty() && QUASH::process::processes().back()->async
+        && (QUASH::process::processes().back()->pid > 0)) {
+      DBG_print("Canceling ", QUASH::Tokenizer::str(QUASH::process::processes().back()->tokens, true), "\n");
+      if (kill(QUASH::process::processes().back()->pid, SIGINT)) {
         DBG_print("Warning: kill failed...\n");
       }
     }

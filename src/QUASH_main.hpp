@@ -3,7 +3,7 @@
 * @Author:   Ben Sokol <Ben>
 * @Email:    ben@bensokol.com
 * @Created:  September 23rd, 2019 [7:59pm]
-* @Modified: October 9th, 2019 [9:22pm]
+* @Modified: October 10th, 2019 [5:59pm]
 * @Version:  1.0.0
 *
 * Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
@@ -17,9 +17,7 @@
 
 #include <map>     // std::map
 #include <string>  // std::string
-#include <vector>  // std::vector
 
-#include "QUASH_process.hpp"
 #include "QUASH_public.hpp"
 
 namespace QUASH {
@@ -69,7 +67,6 @@ namespace QUASH {
 
     std::map<std::string, QUASH_CMD_FLAG> mCmdFlags;  // Const map of Command Line Flags to QUASH_CLI_FLAGS enum
     std::map<std::string, std::string> mEnv;          // Map of environment variables
-    std::vector<process *> mProcesses;                // Processes running in background
   };
 }  // namespace QUASH
 
