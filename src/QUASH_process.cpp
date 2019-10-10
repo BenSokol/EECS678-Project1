@@ -22,12 +22,12 @@ namespace QUASH {
 
     // for (int i = 0; i < _args.size(); i++) {
     //   if (_args[i] == "&") {
-    //     async = 1;
+    //     async = false;
     //     initDone = true;
     //     break;
     //   }
     //   else {
-    //     initDone = false;
+    //     initDone = true;
     //   }
     // }
   }
@@ -41,7 +41,6 @@ namespace QUASH {
 
   void process::command() {
     // Bulk of work:
-    //   uses which
     //   can create new process started on process::thread that can be run
     //   needs to handle setting status
     //   handle internal quash commands (perhaps using seperate function)
@@ -55,16 +54,17 @@ namespace QUASH {
     // int pipe_a[2]
 
 
-    // for (int i = 0; i < tokens.size(); i++) {
-    //   if (tokens[i] == "|") {
-    //     //Create new list of tokens from the tokens after the Pipe
-    //     process* pipedProcess = new Process(newTokens, piped = true);
-    //     //may need a new bool for process stating whether or not it is piped or not.
-    //     //this should allow it to take in an input from another process
-    //
-    //     break;
-    //   }
-    // }
+     for (int i = 0; i < tokens.size(); i++) {
+       if (tokens[i] == "|") {
+         //Create new list of tokens from the tokens after the Pipe
+         //process* pipedProcess = new Process(newTokens, piped = true);
+         //may need a new bool for process stating whether or not it is piped or not.
+         //this should allow it to take in an input from another process
+
+
+         break;
+       }
+     }
     //
     // if (piped == true) {
     //   close(dataPipe[1]);
@@ -73,8 +73,37 @@ namespace QUASH {
     //
     // //put I/O redirection here?
     // execv(tokens[0], arguments);
-  }
 
+    if(tokens[0] == "exit" || tokens[0] == "quit" || tokens[0] == "logout")
+    {
+      status = STATUS_EXIT_NORMAL;
+    }
+    else if(tokens[0] == "kill")
+    {
+      //if the id that is passed to kill is a jobid that is currently
+      //being used, map it to a processid then kill it
+      //otherwise use the built-in kill process
+
+    }
+    else if(tokens[0] == "cd")
+    {
+
+    }
+    else if(tokens[0] == "jobs")
+    {
+      //status = STATUS_COMMAND_JOBS;
+    }
+    else if(tokens[0] == "set")
+    {
+      //status = STATUS_COMMAND_SET;
+    }
+    else if(tokens[0] == "help")
+    {
+      //status = STATUS_COMMAND_HELP;
+      std::cout <<
+    }
+
+  }
 
   // void pipeInputs(const std::deque<std::string> newTokens, process* pipedProcess) {
   //   pipedProcess->start();
