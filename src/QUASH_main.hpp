@@ -3,7 +3,7 @@
 * @Author:   Ben Sokol <Ben>
 * @Email:    ben@bensokol.com
 * @Created:  September 23rd, 2019 [7:59pm]
-* @Modified: October 9th, 2019 [9:10pm]
+* @Modified: October 9th, 2019 [9:22pm]
 * @Version:  1.0.0
 *
 * Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
@@ -62,8 +62,6 @@ namespace QUASH {
     char **mEnvp;
 
     jmp_buf mJumpBufferSIGINT;
-
-    std::streambuf *cin;
 
     bool mPrintEnv;          // Display environment?
     bool mDisplayUsage;      // Display help and exit?

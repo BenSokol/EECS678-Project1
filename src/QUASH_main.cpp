@@ -3,7 +3,7 @@
 * @Author:   Ben Sokol <Ben>
 * @Email:    ben@bensokol.com
 * @Created:  September 23rd, 2019 [8:00pm]
-* @Modified: October 9th, 2019 [9:13pm]
+* @Modified: October 9th, 2019 [9:22pm]
 * @Version:  1.0.0
 *
 * Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
@@ -34,7 +34,7 @@
 #include "UTL_trim.hpp"    // UTL::trim
 
 namespace QUASH {
-  main::main() : cin(std::cin.rdbuf()), mPrintEnv(false), mDisplayUsage(false), mStatus(STATUS_SUCCESS) {
+  main::main() : mPrintEnv(false), mDisplayUsage(false), mStatus(STATUS_SUCCESS) {
   }
 
   void main::init(int argc, char **argv, char **envp) {
@@ -129,7 +129,7 @@ namespace QUASH {
         if (std::cin.eof() || std::cin.fail() || std::cin.bad()) {
           // Reset std::cin (clear EOF from file) so it can read more commands.
           std::cin.clear();
-          freopen("/dev/tty", "rw", stdin);
+          [[maybe_unused]] FILE *f = freopen("/dev/tty", "rw", stdin);
 
           // Validate std::cin is good
           UTL_assert(std::cin.good());
