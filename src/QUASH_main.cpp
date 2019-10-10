@@ -3,7 +3,7 @@
 * @Author:   Ben Sokol <Ben>
 * @Email:    ben@bensokol.com
 * @Created:  September 23rd, 2019 [8:00pm]
-* @Modified: October 9th, 2019 [10:07pm]
+* @Modified: October 10th, 2019 [5:15pm]
 * @Version:  1.0.0
 *
 * Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
@@ -93,6 +93,9 @@ namespace QUASH {
       setjmp(mJumpBufferSIGINT);
       signal(SIGINT, QUASH::main::signalHandlerSIGINT);
 
+      // Check if any jobs are complete
+      checkJobStatus();
+
       if (DBG::out::instance().enabled()) {
         if (isatty(STDIN_FILENO)) {
           DBG_printv(1, "Reading from Command line\n");
@@ -102,9 +105,6 @@ namespace QUASH {
         }
         DBG::out::instance().wait();
       }
-
-      // Check if any jobs are complete
-      checkJobStatus();
 
       std::string input_string = "";
 
@@ -156,13 +156,17 @@ namespace QUASH {
           break;
         case STATUS_TOKENIZER_MISSING_CLOSE_SINGLE_QUOTE:
           DBG_printf("ERROR: Found unmatched closing single quote.\n");
-          std::cout << "ERROR: Found unmatched closing single quote.\n";
+          if (!DBG::out::instance().enabled()) {
+            std::cerr << "ERROR: Found unmatched closing single quote.\n";
+          }
           continue;
           break;
 
         case STATUS_TOKENIZER_MISSING_CLOSE_DOUBLE_QUOTE:
           DBG_printf("ERROR: Found unmatched closing single quote.\n");
-          std::cout << "ERROR: Found unmatched closing single quote.\n";
+          if (!DBG::out::instance().enabled()) {
+            std::cerr << "ERROR: Found unmatched closing single quote.\n";
+          }
           continue;
           break;
 
@@ -179,11 +183,13 @@ namespace QUASH {
           break;
       }
 
-      // DEBUG: Print tokenized string
-      if (DBG::out::instance().enabled()) {
-        DBG::out::instance().wait();
-        DBG_print("\n", Tokenizer::str(retTokenizer.second, false));
+      if (retTokenizer.second.empty()) {
+        DBG_printv(1, "Input string is whitespace or a comment.\n");
+        continue;
       }
+
+      // DEBUG: Print tokenized string
+      DBG_print("\n", Tokenizer::str(retTokenizer.second, false));
 
       checkJobStatus();
 
