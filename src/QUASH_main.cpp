@@ -3,7 +3,7 @@
 * @Author:   Ben Sokol <Ben>
 * @Email:    ben@bensokol.com
 * @Created:  September 23rd, 2019 [8:00pm]
-* @Modified: October 9th, 2019 [8:32pm]
+* @Modified: October 9th, 2019 [9:13pm]
 * @Version:  1.0.0
 *
 * Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
@@ -91,7 +91,7 @@ namespace QUASH {
 
     while (true) {
       setjmp(mJumpBufferSIGINT);
-      // signal(SIGINT, QUASH::main::signalHandlerSIGINT);
+      signal(SIGINT, QUASH::main::signalHandlerSIGINT);
 
       if (DBG::out::instance().enabled()) {
         if (isatty(STDIN_FILENO)) {
