@@ -3,7 +3,7 @@
 * @Author:   Ben Sokol <Ben>
 * @Email:    ben@bensokol.com
 * @Created:  August 28th, 2019 [4:56pm]
-* @Modified: October 8th, 2019 [5:17am]
+* @Modified: October 9th, 2019 [8:42pm]
 * @Version:  1.0.0
 *
 * Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
@@ -14,9 +14,9 @@
 #include <deque>     // std::vector
 #include <iomanip>   // std::setfill, std::setw
 #include <iostream>  // std::cout
-#include <sstream>
-#include <string>   // std::string
-#include <utility>  // std::pair
+#include <sstream>   // std::stringstream
+#include <string>    // std::string
+#include <utility>   // std::pair
 
 #include "QUASH_tokenizer.hpp"
 
@@ -33,7 +33,7 @@ namespace QUASH {
   }
 
 
-  void Tokenizer::print(const std::deque<std::string> &tokens, bool debug, bool oneline) {
+  std::string Tokenizer::str(const std::deque<std::string> &tokens, bool oneline) {
     std::stringstream ss;
     for (size_t i = 0; i < tokens.size(); ++i) {
       if (!oneline) {
@@ -42,13 +42,7 @@ namespace QUASH {
       ss << (oneline ? "" : "  ") << tokens.at(i) << (oneline ? " " : "\n") << std::flush;
     }
 
-    if (debug) {
-      DBG_print("Tokenized print:\n");
-      DBG_write(false, false, true, true, ss.str());
-    }
-    else {
-      std::cout << ss.str();
-    }
+    return ss.str();
   }
 
 
@@ -56,12 +50,21 @@ namespace QUASH {
     quash_status_t status = STATUS_SUCCESS;
     std::deque<std::string> tokens;
 
-    DBG_print("Starting tokenizer...\n");
-    DBG_print("Tokenizing: ", aString, "\n");
+    DBG_printv(1, "Starting tokenizer...\n");
+    DBG_printv(1, "Tokenizing: ", aString, "\n");
 
-    enum state_t : uint8_t { NORMAL, SINGLE_QUOTE, DOUBLE_QUOTE, REDIRECT_OUT_APPEND, PIPE_OR, ASYNC_AND, DONE, COUNT };
+    // State machine
+    enum state_t : uint8_t {
+      NORMAL,
+      SINGLE_QUOTE,
+      DOUBLE_QUOTE,
+      REDIRECT_OUT_APPEND,
+      PIPE_OR,
+      ASYNC_AND,
+      DONE,
+      COUNT
+    } state = NORMAL;
 
-    state_t state = NORMAL;
     std::string token = "";
 
     for (size_t i = 0; i < aString.size(); ++i) {
@@ -148,7 +151,7 @@ namespace QUASH {
           UTL_assert_always();
           break;
 
-        default:
+        case NORMAL:
           // ---------------------------------
           // Check Next character
           // ---------------------------------
@@ -237,6 +240,9 @@ namespace QUASH {
             token += aString[i];
           }
           break;
+        default:
+          UTL_assert_always();
+          break;
       }
 
       if (state == DONE) {
@@ -260,7 +266,7 @@ namespace QUASH {
       status = STATUS_TOKENIZER_MISSING_CLOSE_DOUBLE_QUOTE;
     }
 
-    DBG_print("Tokenizer is complete.\n");
+    DBG_printv(1, "Tokenizer is complete.\n");
     return std::pair<quash_status_t, std::deque<std::string>>(status, tokens);
   }  // namespace QUASH
 

@@ -3,12 +3,14 @@
 * @Author:   Ben Sokol <Ben>
 * @Email:    ben@bensokol.com
 * @Created:  September 23rd, 2019 [8:00pm]
-* @Modified: October 8th, 2019 [5:18am]
+* @Modified: October 9th, 2019 [8:32pm]
 * @Version:  1.0.0
 *
 * Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
 */
 
+#include <csetjmp>  // setjmp, longjmp
+#include <csignal>  // kill
 #include <cstdint>  // uint8_t
 
 #include <deque>
@@ -19,42 +21,51 @@
 
 #include "QUASH_main.hpp"
 
-#include "DBG_out.hpp"          // DBG::out::instance(), DBG_print, etc.
-#include "QUASH_hostname.hpp"   // QUASH::COMMANDS::hostname()
+#include "DBG_out.hpp"         // DBG::out::instance(), DBG_print, etc.
+#include "QUASH_hostname.hpp"  // QUASH::COMMANDS::hostname()
+#include "QUASH_process.hpp"
 #include "QUASH_ps1.hpp"        // QUASH::COMMANDS::ps1()
 #include "QUASH_public.hpp"     // QUASH::STATUS_CODES
 #include "QUASH_pwd.hpp"        // QUASH::COMMANDS::pwd()
 #include "QUASH_tokenizer.hpp"  // QUASH::Tokenizer()
 #include "QUASH_whoami.hpp"     // QUASH::COMMANDS::whoami()
-#include "UTL_colors.hpp"       // UTL::COLORS::FG::red, etc.
+#include "UTL_assert.h"
+#include "UTL_colors.hpp"  // UTL::COLORS::FG::red, etc.
+#include "UTL_trim.hpp"    // UTL::trim
 
 namespace QUASH {
-  main::main(const int argc, const char *const *const argv, const char *const *const envp) :
-      mPrintEnv(false), mDisplayUsage(false), mStatus(STATUS_SUCCESS) {
-    DBG_print("Starting Quash Initialization\n", "");
-    if (mStatus == STATUS_SUCCESS) {
-      preInit();
-      if (mStatus == STATUS_SUCCESS) {
-        initArgs(argc, argv);
-        if (mStatus == STATUS_SUCCESS) {
-          initEnv(envp);
-          if (mStatus == STATUS_SUCCESS) {
-            postInit();
-            if (mStatus == STATUS_SUCCESS) {
-              DBG_print("Finished Quash Initialization\n");
-              if (DBG::out::instance().enabled()) {
-                DBG_print("Debug Information:\n");
-                DBG_print("HOME     = ", mEnv["HOME"], "\n");
-                DBG_print("HOSTNAME = ", QUASH::COMMANDS::hostname(), "\n");
-                DBG_print("PATH     = ", mEnv["PATH"], "\n");
-                DBG_print("PWD      = ", QUASH::COMMANDS::pwd(), "\n");
-                DBG_print("USERNAME = ", QUASH::COMMANDS::whoami(), "\n");
-              }
-            }
-          }
-        }
-      }
+  main::main() : cin(std::cin.rdbuf()), mPrintEnv(false), mDisplayUsage(false), mStatus(STATUS_SUCCESS) {
+  }
+
+  void main::init(int argc, char **argv, char **envp) {
+    DBG_printv(1, "Starting Quash Initialization\n");
+
+    mArgc = argc;
+    mArgv = argv;
+    mEnvp = envp;
+
+    // Initialize command line flags map
+    initCmdFlags();
+
+    // Process command line flags
+    initArgs();
+    if (mStatus != STATUS_SUCCESS) {
+      return;
     }
+
+    // Process environment
+    initEnv();
+    if (mStatus != STATUS_SUCCESS) {
+      return;
+    }
+
+    DBG_printv(1, "Finished Quash Initialization\n");
+    DBG_printv(1, "Debug Information:\n");
+    DBG_printv(1, "HOME     = ", mEnv["HOME"], "\n");
+    DBG_printv(1, "HOSTNAME = ", QUASH::COMMANDS::hostname(), "\n");
+    DBG_printv(1, "PATH     = ", mEnv["PATH"], "\n");
+    DBG_printv(1, "PWD      = ", QUASH::COMMANDS::pwd(), "\n");
+    DBG_printv(1, "USERNAME = ", QUASH::COMMANDS::whoami(), "\n");
   }
 
 
@@ -72,31 +83,67 @@ namespace QUASH {
     }
 
     if (mPrintEnv) {
-      DBG_print("Printing environment variables\n");
+      DBG_printv(1, "Printing environment variables\n");
       printEnv();
     }
 
     DBG_print("Starting Quash...\n");
 
     while (true) {
+      setjmp(mJumpBufferSIGINT);
+      // signal(SIGINT, QUASH::main::signalHandlerSIGINT);
+
       if (DBG::out::instance().enabled()) {
+        if (isatty(STDIN_FILENO)) {
+          DBG_printv(1, "Reading from Command line\n");
+        }
+        else {
+          DBG_printv(1, "Reading from IO redirection\n");
+        }
         DBG::out::instance().wait();
       }
 
-      // TODO: Check if any async processes finished
+      // Check if any jobs are complete
       checkJobStatus();
 
-      // Prints PS1
-      std::cout << COMMANDS::ps1();
+      std::string input_string = "";
 
-      // Gets input from user
-      std::string input_string = getInput();
+      if (isatty(STDIN_FILENO)) {
+        // Prints PS1
+        std::cout << COMMANDS::ps1();
 
-      // Detects if CTRL-D (EOF) has been entered. If so, exits program.
-      if (std::cin.eof()) {
-        DBG_write(false, false, true, false, "\n");
-        DBG_print("EOF has been detected, exiting...\n");
-        break;
+        // Gets input from user
+        input_string = getInput();
+
+        // Detects if CTRL-D (EOF) has been entered. If so, exits program.
+        if (std::cin.eof()) {
+          DBG_write(false, false, true, false, "\n");
+          DBG_print("EOF has been detected, exiting...\n");
+          break;
+        }
+      }
+      else {
+        // Gets input from IO redirection
+        input_string = getInput();
+
+        if (std::cin.eof() || std::cin.fail() || std::cin.bad()) {
+          // Reset std::cin (clear EOF from file) so it can read more commands.
+          std::cin.clear();
+          freopen("/dev/tty", "rw", stdin);
+
+          // Validate std::cin is good
+          UTL_assert(std::cin.good());
+          UTL_assert(std::cin.rdstate() == 0);
+
+          DBG_print("EOF has been detected, resuming normal operation...\n");
+          continue;
+        }
+        std::cout << COMMANDS::ps1() << input_string << "\n";
+      }
+
+      // If input_string is empty, continue
+      if (UTL::trim(input_string).empty()) {
+        continue;
       }
 
       // Tokenize input string
@@ -105,12 +152,18 @@ namespace QUASH {
       // Handle status from tokenize
       switch (retTokenizer.first) {
         case STATUS_SUCCESS:
-          DBG_print("Tokenizer was successful\n");
+          DBG_printv(1, "Tokenizer was successful\n");
           break;
         case STATUS_TOKENIZER_MISSING_CLOSE_SINGLE_QUOTE:
+          DBG_printf("ERROR: Found unmatched closing single quote.\n");
+          std::cout << "ERROR: Found unmatched closing single quote.\n";
+          continue;
           break;
 
         case STATUS_TOKENIZER_MISSING_CLOSE_DOUBLE_QUOTE:
+          DBG_printf("ERROR: Found unmatched closing single quote.\n");
+          std::cout << "ERROR: Found unmatched closing single quote.\n";
+          continue;
           break;
 
         default:
@@ -118,15 +171,18 @@ namespace QUASH {
             DBG::out::instance().wait();
           }
           std::cerr << "ERROR: Unknown error from Tokenizer. Exiting...\n";
+          if (DBG::out::instance().enabled()) {
+            DBG_printf("ERROR: Unknown error from Tokenizer. Exiting...\n");
+            DBG::out::instance().wait();
+          }
           exit(STATUS_UNKNOWN);
           break;
-          // Handle error from Tokenize;
       }
 
       // DEBUG: Print tokenized string
       if (DBG::out::instance().enabled()) {
         DBG::out::instance().wait();
-        Tokenizer::print(retTokenizer.second, true, false);
+        DBG_print("\n", Tokenizer::str(retTokenizer.second, false));
       }
 
       checkJobStatus();
@@ -153,8 +209,8 @@ namespace QUASH {
       // start process
       // p->start();
 
-      // Wait for process to finish if not async
-      // if (!p->async) {
+      // Wait for process to finish if async
+      // if (p->async) {
       //   while (!p->done) {
       //     std::this_thread::yield();
       //   }
@@ -176,33 +232,11 @@ namespace QUASH {
     }
 
     DBG_print("Exiting Quash...\n");
-
+    if (DBG::out::instance().enabled()) {
+      DBG::out::instance().wait();
+    }
     return mStatus;
   }
-
-  // uint8_t main::runCommand(process &p) {
-  //   std::vector<const char *> args;
-  //   bool hasPipe = false;
-  //   for (size_t i = 0; i < p.args.size(); ++i) {
-  //     if (p.args[i].compare("|")) {
-  //       hasPipe = true;
-  //       break;
-  //     }
-  //     args.push_back(p.args[i].c_str());
-  //   }
-  //   args.push_back(nullptr);
-  //
-  //   p.initDone = true;
-  //
-  //   if (hasPipe) {
-  //     std::deque<std::string> postPipe;
-  //     std::move(p.args.begin() + hasPipe, p.args.end(), postPipe.begin());
-  //   }
-  //   else {
-  //     // call fork/exec using
-  //     // args.data() will return char * const*
-  //   }
-  // }
 
 
   void main::checkJobStatus() {
@@ -214,7 +248,7 @@ namespace QUASH {
           debugWait = false;
         }
         std::cout << "[" << std::distance(mProcesses.begin(), it) << "]\t" << (*it)->pid << "\tfinished";
-        QUASH::Tokenizer::print((*it)->tokens, false, true);
+        std::cout << QUASH::Tokenizer::str((*it)->tokens, true);
         std::cout << "\n";
         delete (*it);
         mProcesses.erase(it);
@@ -230,15 +264,37 @@ namespace QUASH {
   }
 
 
-  void main::initArgs(const int argc, const char *const *const argv) {
-    if (argc > 1) {
+  void main::signalHandlerSIGINT(int) {
+    // DBG_write(false, false, true, false, "\n");
+    DBG_print("CTRL-C detected\n");
+
+    QUASH::main *_this = &QUASH::main::instance();
+
+    // Kill currently running process.
+    // Currently running process will always be last process in the mProcesses vector.
+    // Only kill it if it is running asynchronously.
+    if (!_this->mProcesses.empty() && _this->mProcesses.back()->async && (_this->mProcesses.back()->pid > 0)) {
+      DBG_print("Canceling ", QUASH::Tokenizer::str(_this->mProcesses.back()->tokens, true), "\n");
+      if (kill(_this->mProcesses.back()->pid, SIGINT)) {
+        DBG_print("Warning: kill failed...\n");
+      }
+    }
+
+    std::cout << "\n";
+    longjmp(QUASH::main::instance().mJumpBufferSIGINT, 1);
+  }
+
+
+  void main::initArgs() {
+    if (mArgc > 1) {
       bool debug_os = false;
       bool debug_ofs = false;
+      size_t verbosity = 0;
       std::string str = "";
 
-      for (int i = 1; i < argc; ++i) {
-        if (mCmdFlags.count(argv[i])) {
-          switch (mCmdFlags[argv[i]]) {
+      for (int i = 1; i < mArgc; ++i) {
+        if (mCmdFlags.count(mArgv[i])) {
+          switch (mCmdFlags[mArgv[i]]) {
             case QUASH_FLAG_HELP:
               // Help (-h, --help)
               mDisplayUsage = true;
@@ -248,6 +304,7 @@ namespace QUASH {
             case QUASH_FLAG_DEBUG:
               // Debug Mode (-d, --debug)
               DBG_print("Debug Mode - Enabled\n");
+              verbosity += 1;
               debug_os = true;
               debug_ofs = true;
               break;
@@ -255,13 +312,17 @@ namespace QUASH {
             case QUASH_FLAG_DEBUG_FILE:
               // Debug Mode (--debug-no-file)
               DBG_print("Enabled output to file\n");
+              DBG::out::instance().verbosity(DBG::out::instance().verbosity() + 1);
               debug_ofs = true;
+              verbosity += 1;
               break;
 
             case QUASH_FLAG_DEBUG_STDERR:
               // Debug Mode (--debug-no-stderr)
+              DBG::out::instance().verbosity(DBG::out::instance().verbosity() + 1);
               DBG_print("Enabled output to stderr\n");
               debug_os = true;
+              verbosity += 1;
               break;
 
             case QUASH_FLAG_PRINT_ENV:
@@ -271,42 +332,26 @@ namespace QUASH {
           }
         }
         else {
-          std::cerr << "ERROR: Unknown command line argument \'" << argv[i] << "\'\n";
+          std::cerr << "ERROR: Unknown command line argument \'" << mArgv[i] << "\'\n";
           mStatus = STATUS_INIT_UNKNOWN_COMMAND_LINE_PARAMETER;
         }
       }
-
-      DBG::out::instance().ofsEnable(debug_ofs);
-      DBG::out::instance().osEnable(debug_os);
-      DBG::out::instance().enable(debug_os || debug_ofs);
 
       // Shutdown debug module if not needed
       if (!debug_os && !debug_ofs) {
         DBG::out::instance().shutdown();
       }
-    }
-  }
-
-
-  void main::initEnv(const char *const *const envp) {
-    for (char **env = const_cast<char **>(envp); *env != nullptr; env++) {
-      std::string row = *env;
-      size_t sep = row.find_first_of("=");
-      if (sep == std::string::npos) {
-        mEnv.insert(std::pair<std::string, std::string>(row.substr(0, row.size() - 1), ""));
-      }
       else {
-        mEnv.insert(std::pair<std::string, std::string>(row.substr(0, sep), row.substr(sep + 1)));
+        DBG::out::instance().ofsEnable(debug_ofs);
+        DBG::out::instance().osEnable(debug_os);
+        DBG::out::instance().enable(debug_os || debug_ofs);
+        DBG::out::instance().verbosity(verbosity - 1);
       }
     }
   }
 
 
-  void main::postInit() {
-  }
-
-
-  void main::preInit() {
+  void main::initCmdFlags() {
     mCmdFlags["-h"] = QUASH_FLAG_HELP;
     mCmdFlags["--help"] = QUASH_FLAG_HELP;
 
@@ -323,11 +368,26 @@ namespace QUASH {
   }
 
 
+  void main::initEnv() {
+    for (char **env = const_cast<char **>(mEnvp); *env != nullptr; env++) {
+      std::string row = *env;
+      size_t sep = row.find_first_of("=");
+      if (sep == std::string::npos) {
+        mEnv.insert(std::pair<std::string, std::string>(row.substr(0, row.size() - 1), ""));
+      }
+      else {
+        mEnv.insert(std::pair<std::string, std::string>(row.substr(0, sep), row.substr(sep + 1)));
+      }
+    }
+  }
+
+
   void main::printEnv() const {
     for (auto &env : mEnv) {
       std::cout << env.first << " = " << env.second << "\n";
     }
   }
+
 
   void main::usage() const {
     std::cout << "Usage: ./quash\n";

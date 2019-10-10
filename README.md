@@ -46,5 +46,14 @@ For compilation help, see [this](https://github.com/BenSokol/build-tools) page.
 | --help                | -h         | Display help, then exit                                                                                                                  |
 | --print-env           |            | Prints environment after initializing shell (before giving first prompt)                                                                 |
 
+#### Debug
+Debug mode has 2 levels of verbosity.
+```bash
+./quash          # Normal mode - no debug output
+./quash -d       # Verbosity level 1
+./quash -d -d    # Verbosity level 2
+./quash -df -df  # Verbosity level 2 (output only to file)
+```
+
 ## License
 [MIT](https://github.com/BenSokol/EECS678-Project1/blob/master/LICENSE).

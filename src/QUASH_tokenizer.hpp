@@ -3,14 +3,14 @@
 * @Author:   Ben Sokol <Ben>
 * @Email:    ben@bensokol.com
 * @Created:  August 28th, 2019 [4:56pm]
-* @Modified: October 8th, 2019 [5:17am]
+* @Modified: October 9th, 2019 [6:18pm]
 * @Version:  1.0.0
 *
 * Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
 */
 
-#ifndef TOKENIZER_HPP
-#define TOKENIZER_HPP
+#ifndef QUASH_TOKENIZER_HPP
+#define QUASH_TOKENIZER_HPP
 
 #include <cstdint>  // uint8_t
 
@@ -25,7 +25,7 @@ namespace QUASH {
   public:
     ~Tokenizer();
 
-    static void print(const std::deque<std::string> &tokens, bool debug, bool oneline);
+    static std::string str(const std::deque<std::string> &tokens, bool oneline);
     static std::pair<quash_status_t, std::deque<std::string> > Tokenize(std::string aString);
 
   private:
