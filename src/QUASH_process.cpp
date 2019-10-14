@@ -67,8 +67,7 @@ namespace QUASH {
      }
     //
     // if (piped == true) {
-    //   close(dataPipe[1]);
-    //     dup2(dataPipe[0], input?);
+    //   call pipedInputs?
     // }
     //
     // //put I/O redirection here?
@@ -84,14 +83,42 @@ namespace QUASH {
       //being used, map it to a processid then kill it
       //otherwise use the built-in kill process
 
+      //int jobID = atoi(tokens[1]);
+      /*for(int i == 0; i<processes().size; i++)
+      {
+        if(i == jobID)
+        {
+          //kill the process with that JobID
+        }
+        else
+        {
+          general kill command
+        }
+      }
+      */
+
     }
     else if(tokens[0] == "cd")
     {
-
+      //if(tokens.size() !> 1)
+      //{
+          //change directory to home directory
+      //}
+      //else
+      //{
+      //  std::string newDir = tokens[1];
+      //  set to new directory
+      //}
     }
     else if(tokens[0] == "jobs")
     {
       //status = STATUS_COMMAND_JOBS;
+      //int jobID = atoi(tokens[1]);
+      /*for(int i == 0; i<processes().size; i++)
+      {
+        std::cout << "[" << i << "] " << processes()[i].tokens[1];
+      }
+      */
     }
     else if(tokens[0] == "set")
     {
@@ -100,7 +127,7 @@ namespace QUASH {
     else if(tokens[0] == "help")
     {
       //status = STATUS_COMMAND_HELP;
-      std::cout <<
+      //std::cout <<
     }
 
   }
