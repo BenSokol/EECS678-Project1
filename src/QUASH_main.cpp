@@ -3,7 +3,7 @@
 * @Author:   Ben Sokol <Ben>
 * @Email:    ben@bensokol.com
 * @Created:  September 23rd, 2019 [8:00pm]
-* @Modified: October 10th, 2019 [6:10pm]
+* @Modified: October 18th, 2019 [11:40am]
 * @Version:  1.0.0
 *
 * Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
@@ -180,7 +180,7 @@ namespace QUASH {
             DBG_printf("ERROR: Unknown error from Tokenizer. Exiting...\n");
             DBG::out::instance().wait();
           }
-          exit(STATUS_UNKNOWN);
+          exit(retTokenizer.first);
           break;
       }
 
@@ -192,53 +192,84 @@ namespace QUASH {
       // DEBUG: Print tokenized string
       DBG_print("\n", Tokenizer::str(retTokenizer.second, false));
 
-      // Validate tokens semantically
-
       // Check if any jobs are complete
       checkJobStatus();
 
-      // ================================
-      // TODO: Goal for stage 1
-      // system("ls -lha /bin");
-      // ================================
 
-      // Can assume (hard code if needed) ls is at /bin/ls will find using QUASH::which when complete
-      // process *p = new process({ "ls", "-lha", "/bin" });
+      // Create new process
+      process *p = new process(retTokenizer.second);
 
-      // while (!p->initDone) {
-      //   std::this_thread::yield();
-      // }
-      //
-      // if (p->status != STATUS_SUCCESS) {
-      //   // TODO: Handle
-      // }
+      switch (p->status) {
+        case STATUS_SUCCESS:
+          DBG_printv(1, "Process creation was successful\n");
+          break;
+        case STATUS_COMMAND_SYNTAX_ERROR:
+          DBG_printf("ERROR: ", p->errorMessage, "\n");
+          if (!DBG::out::instance().enabled()) {
+            std::cerr << "ERROR: " << p->errorMessage << "\n";
+          }
+          continue;
+          break;
 
-      // Add process to vector of processes
-      // QUASH::process::processes().push_back(p);
+        case STATUS_COMMAND_SEMANTIC_ERROR:
+          DBG_printf("ERROR: ", p->errorMessage, "\n");
+          if (!DBG::out::instance().enabled()) {
+            std::cerr << "ERROR: " << p->errorMessage << "\n";
+          }
+          continue;
+          break;
+
+        default:
+          if (DBG::out::instance().enabled()) {
+            DBG::out::instance().wait();
+          }
+          std::cerr << "ERROR: Unknown error from Process Creation. Exiting...\n";
+          if (DBG::out::instance().enabled()) {
+            DBG_printf("ERROR: Unknown error from Process Creation. Exiting...\n");
+            DBG::out::instance().wait();
+          }
+          exit(p->status);
+          break;
+      }
 
       // start process
-      // p->start();
+      p->start();
 
-      // Wait for process to finish if async
-      // if (p->async) {
-      //   while (!p->done) {
-      //     std::this_thread::yield();
-      //   }
-      // }
+      if (p->async) {
+        quash_status_t cmdStatus = p->status;
+        std::string cmdErrorMessage = p->errorMessage;
+        delete p;
 
-      // TODO: uncomment, exit() should return true if "exit" or "quit" is run.
-      // if (retCommand.first != STATUS_SUCCESS) {
-      //   if (retCommand.first == STATUS_EXIT_NORMAL) {
-      //     break;
-      //   }
-      //
-      //   switch (retCommand.first) {
-      //     case STATUS_UNKNOWN:
-      //       break;
-      //     default:
-      //       break;
-      //   }
-      // }
+        switch (cmdStatus) {
+          case STATUS_SUCCESS:
+            DBG_printv(1, "Process was successful\n");
+            break;
+
+          case STATUS_EXIT_NORMAL:
+            if (DBG::out::instance().enabled()) {
+              DBG_print("Process requested exit normal\n");
+              DBG::out::instance().wait();
+            }
+            exit(0);
+            break;
+
+          default:
+            if (DBG::out::instance().enabled()) {
+              DBG::out::instance().wait();
+            }
+            std::cerr << "ERROR: Unknown error from Process Creation. Exiting...\n";
+            if (DBG::out::instance().enabled()) {
+              DBG_printf("ERROR: Unknown error from Process Creation. Exiting...\n");
+              DBG::out::instance().wait();
+            }
+            exit(cmdStatus);
+            break;
+        }
+      }
+      else {
+        // Add process to vector of processes
+        QUASH::process::processes().push_back(p);
+      }
     }
 
     DBG_print("Exiting Quash...\n");

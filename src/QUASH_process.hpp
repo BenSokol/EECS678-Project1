@@ -3,7 +3,7 @@
 * @Author:   Ben Sokol <Ben>
 * @Email:    ben@bensokol.com
 * @Created:  October 9th, 2019 [2:29pm]
-* @Modified: October 10th, 2019 [6:08pm]
+* @Modified: October 18th, 2019 [12:06pm]
 * @Version:  1.0.0
 *
 * Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
@@ -15,6 +15,7 @@
 #include <cstdint>
 
 #include <deque>
+#include <memory>
 #include <string>
 #include <thread>
 #include <vector>
@@ -41,13 +42,19 @@ namespace QUASH {
     friend class main;
 
   private:
-    quash_status_t status;                 // Status
-    uint8_t async;                         // Is this command async? (i.e. & == false)
-    bool initDone;                         // true after async is determined
-    bool done;                             // When command has finished == true
-    std::thread thread;                    // Thread to use for run
-    std::thread::id tid;                   // id of thread
-    pid_t pid;                             // id of process
+    quash_status_t status;     // Status
+    std::string errorMessage;  // Message if error occured.
+
+    std::vector<int *> pipes;
+
+    uint8_t async;  // Is this command async? (i.e. & == false)
+    bool done;      // When command has finished == true
+
+    std::thread thread;  // Thread to use for run
+
+    std::thread::id tid;  // id of thread
+    pid_t pid;            // id of process
+
     const std::deque<std::string> tokens;  // arguments for process
   };
 
