@@ -3,22 +3,30 @@
 * @Author:   Ben Sokol <Ben>
 * @Email:    ben@bensokol.com
 * @Created:  October 9th, 2019 [2:24pm]
-* @Modified: October 18th, 2019 [12:14pm]
+* @Modified: October 19th, 2019 [6:36pm]
 * @Version:  1.0.0
 *
 * Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
 */
 
+#include <algorithm>  // std::min
+#include <deque>      // std::deque
+#include <string>     // std::string
+#include <thread>     // std::thread
+
+#include <unistd.h>
+
 #include "QUASH_process.hpp"
 
 #include "DBG_out.hpp"
 #include "QUASH_public.hpp"
+#include "QUASH_tokenizer.hpp"
 #include "UTL_assert.h"
 
 namespace QUASH {
 
-  process::process(const std::deque<std::string>& _tokens) :
-      status(STATUS_SUCCESS), errorMessage(""), async(true), done(false), tid(0), pid(0), tokens(_tokens) {
+  process::process(const std::deque<std::string> _tokens) :
+      status(STATUS_SUCCESS), errorMessage(""), async(true), done(false), pid(0), tokens(_tokens) {
     // Should set default values of status, async, initDone, done
     // check for async
 
@@ -61,11 +69,11 @@ namespace QUASH {
         if (pStatus != 0) {
           errorMessage = "Failed to create pipe.";
           UTL_assert_always();
-          return;
         }
       }
     }
   }
+
 
   process::~process() {
     // Ensure everything is cleaned up
@@ -78,6 +86,7 @@ namespace QUASH {
       delete[] p;
     }
   }
+
 
   void process::command() {
     // Bulk of work:
@@ -109,6 +118,7 @@ namespace QUASH {
       for (; i < tokens.size(); i++) {
         if (tokens[i] == "|") {
           // Advance to next command after pipe
+          DBG_printv(1, "Found pipe at ", i, "\n");
           i++;
           foundPipe = true;
           break;
@@ -116,22 +126,19 @@ namespace QUASH {
         endCommand = i;
       }
 
-      UTL_assert(begCommand != endCommand);
-
-      if (!foundPipe) {
-        // Close pipes because we arent using them.
-        for (auto& p : pipes) {
-          close(p[0]);
-          close(p[1]);
-        }
+      UTL_assert(begCommand <= endCommand);
+      if (DBG::out::instance().enabled()) {
+        DBG_print("Running command [",
+                  begCommand,
+                  ", ",
+                  endCommand,
+                  "]: \n",
+                  QUASH::Tokenizer::str(std::deque<std::string>(tokens.begin() + static_cast<char>(begCommand),
+                                                                tokens.begin() + static_cast<char>(endCommand)),
+                                        false),
+                  "\n");
+        DBG::out::instance().wait();
       }
-
-      DBG_print("Running command: ");
-      for (size_t j = begCommand; begCommand < endCommand; ++j) {
-        DBG_write(false, false, true, true, tokens[j], " ");
-      }
-
-      DBG_write(false, false, true, true, "\n");
 
       //
       // if (piped == true) {

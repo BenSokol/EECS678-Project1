@@ -3,7 +3,7 @@
 * @Author:   Ben Sokol <Ben>
 * @Email:    ben@bensokol.com
 * @Created:  August 28th, 2019 [4:56pm]
-* @Modified: October 10th, 2019 [5:09pm]
+* @Modified: October 20th, 2019 [4:10am]
 * @Version:  1.0.0
 *
 * Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
@@ -11,12 +11,11 @@
 
 #include <cstdint>  // uint8_t
 
-#include <deque>     // std::vector
-#include <iomanip>   // std::setfill, std::setw
-#include <iostream>  // std::cout
-#include <sstream>   // std::stringstream
-#include <string>    // std::string
-#include <utility>   // std::pair
+#include <deque>    // std::deque
+#include <iomanip>  // std::setfill, std::setw
+#include <sstream>  // std::stringstream
+#include <string>   // std::string
+#include <utility>  // std::pair
 
 #include "QUASH_tokenizer.hpp"
 
@@ -39,7 +38,14 @@ namespace QUASH {
       if (!oneline) {
         ss << std::setfill(' ') << std::setw(3) << std::to_string(i);
       }
-      ss << (oneline ? "" : "  ") << tokens.at(i) << (oneline ? " " : "\n") << std::flush;
+      ss << (oneline ? "" : "  ") << tokens.at(i);
+      if (!oneline) {
+        ss << "\n";
+      }
+      else if (i < tokens.size() - 1) {
+        ss << " ";
+      }
+      ss << std::flush;
     }
 
     return ss.str();
@@ -240,6 +246,7 @@ namespace QUASH {
             token += aString[i];
           }
           break;
+
         default:
           UTL_assert_always();
           break;
@@ -260,10 +267,12 @@ namespace QUASH {
     // Validate tokenized string
     if (state == SINGLE_QUOTE) {
       status = STATUS_TOKENIZER_MISSING_CLOSE_SINGLE_QUOTE;
+      tokens.clear();
     }
 
     if (state == DOUBLE_QUOTE) {
       status = STATUS_TOKENIZER_MISSING_CLOSE_DOUBLE_QUOTE;
+      tokens.clear();
     }
 
     DBG_printv(1, "Tokenizer is complete.\n");

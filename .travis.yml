@@ -34,7 +34,7 @@ matrix:
       script:
         - make var CC=gcc-9 CXX=g++-9
         - make CC=gcc-9 CXX=g++-9
-        - make test CC=gcc-9 CXX=g++-9
+        - make run-test CC=gcc-9 CXX=g++-9
 
     - name: Linux - Ubuntu - Bionic - GCC 9.2.0
       os: linux
@@ -49,7 +49,7 @@ matrix:
       script:
         - make var CC=gcc-9 CXX=g++-9
         - make CC=gcc-9 CXX=g++-9
-        - make test CC=gcc-9 CXX=g++-9
+        - make run-test CC=gcc-9 CXX=g++-9
 
     - name: macOS - 10.14 - xcode11 - GCC 9.2.0
       os: osx
@@ -60,7 +60,7 @@ matrix:
       script:
         - make var CC=gcc-9 CXX=g++-9
         - make CC=gcc-9 CXX=g++-9
-        - make test CC=gcc-9 CXX=g++-9
+        - make run-test CC=gcc-9 CXX=g++-9
 
     - name: Linux - Ubuntu - Bionic - cppcheck
       os: linux
@@ -82,4 +82,4 @@ before_install:
 script:
   - make var
   - make
-  - make test
+  - make run-test

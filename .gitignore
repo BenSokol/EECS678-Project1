@@ -1,7 +1,9 @@
 .pre_build
 make.log
 quash
+quash-test
 prog
+bin/
 dep/
 obj/
 logs/

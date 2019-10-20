@@ -3,7 +3,7 @@
 * @Author:   Ben Sokol <Ben>
 * @Email:    ben@bensokol.com
 * @Created:  September 25th, 2019 [5:41pm]
-* @Modified: October 2nd, 2019 [10:30pm]
+* @Modified: October 20th, 2019 [5:30am]
 * @Version:  1.0.0
 *
 * Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
@@ -26,13 +26,15 @@ namespace QUASH::COMMANDS {
     }
     std::string pwd = std::string(buff);
 
-    char *homedir_chr = getenv("HOME");
-    if (homedir_chr == nullptr) {
-      return pwd;
-    }
-    std::string homedir_str = std::string(homedir_chr);
+    try {
+      char *homedir_chr = getenv("HOME");
+      if (homedir_chr == nullptr) {
+        return pwd;
+      }
+      std::string homedir_str = std::string(homedir_chr);
+      pwd.replace(pwd.find(homedir_str), homedir_str.length(), "~");
+    } catch (std::exception) {}
 
-    pwd.replace(pwd.find(homedir_str), homedir_str.length(), "~");
     return pwd;
   }
 }  // namespace QUASH::COMMANDS

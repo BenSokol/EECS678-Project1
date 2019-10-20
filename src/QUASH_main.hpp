@@ -3,7 +3,7 @@
 * @Author:   Ben Sokol <Ben>
 * @Email:    ben@bensokol.com
 * @Created:  September 23rd, 2019 [7:59pm]
-* @Modified: October 10th, 2019 [5:59pm]
+* @Modified: October 20th, 2019 [1:32am]
 * @Version:  1.0.0
 *
 * Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
@@ -35,14 +35,14 @@ namespace QUASH {
 
     quash_status_t run();
 
-  private:
+  protected:
     void checkJobStatus();
     std::string getInput();
-    static void signalHandlerSIGINT(int signum);
+    [[noreturn]] static void signalHandlerSIGINT(int signum);
 
-    void initArgs();
+    void initArgs(int argc, char **argv);
     void initCmdFlags();
-    void initEnv();
+    void initEnv(char **envp);
 
     void printEnv() const;
     void usage() const;
@@ -54,10 +54,6 @@ namespace QUASH {
       QUASH_FLAG_DEBUG_FILE,
       QUASH_FLAG_PRINT_ENV
     } QUASH_CMD_FLAG;
-
-    int mArgc;
-    char **mArgv;
-    char **mEnvp;
 
     jmp_buf mJumpBufferSIGINT;
 

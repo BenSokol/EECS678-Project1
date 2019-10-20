@@ -3,7 +3,7 @@
 * @Author:   Ben Sokol <Ben>
 * @Email:    ben@bensokol.com
 * @Created:  August 28th, 2019 [4:56pm]
-* @Modified: October 9th, 2019 [6:18pm]
+* @Modified: October 20th, 2019 [1:33am]
 * @Version:  1.0.0
 *
 * Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
@@ -14,7 +14,7 @@
 
 #include <cstdint>  // uint8_t
 
-#include <deque>    // std::vector
+#include <deque>    // std::deque
 #include <string>   // std::string
 #include <utility>  // std::pair
 
@@ -28,7 +28,7 @@ namespace QUASH {
     static std::string str(const std::deque<std::string> &tokens, bool oneline);
     static std::pair<quash_status_t, std::deque<std::string> > Tokenize(std::string aString);
 
-  private:
+  protected:
     Tokenizer();
   };
 }  // namespace QUASH

@@ -3,7 +3,7 @@
 * @Author:   Ben Sokol <Ben>
 * @Email:    ben@bensokol.com
 * @Created:  October 9th, 2019 [2:29pm]
-* @Modified: October 18th, 2019 [12:06pm]
+* @Modified: October 20th, 2019 [1:34am]
 * @Version:  1.0.0
 *
 * Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
@@ -12,16 +12,14 @@
 #ifndef QUASH_PROCESS_HPP
 #define QUASH_PROCESS_HPP
 
-#include <cstdint>
+#include <cstdint>  // uint8_t
 
-#include <deque>
-#include <memory>
-#include <string>
-#include <thread>
-#include <vector>
+#include <deque>   // std::deque
+#include <string>  // std::string
+#include <thread>  // std::thread
+#include <vector>  // std::vector
 
-#include <sys/types.h>
-#include <unistd.h>
+#include <sys/types.h>  // pid_t
 
 #include "QUASH_public.hpp"
 
@@ -29,7 +27,7 @@ namespace QUASH {
   class process {
   public:
     // Defined in QUASH_process.cpp
-    explicit process(const std::deque<std::string> &_tokens);
+    explicit process(const std::deque<std::string> _tokens);
     ~process();
     void command();
     void start();
@@ -41,7 +39,7 @@ namespace QUASH {
     // Access data directly from main
     friend class main;
 
-  private:
+  protected:
     quash_status_t status;     // Status
     std::string errorMessage;  // Message if error occured.
 
