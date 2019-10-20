@@ -3,7 +3,7 @@
 * @Author:   Ben Sokol <Ben>
 * @Email:    ben@bensokol.com
 * @Created:  October 20th, 2019 [4:04am]
-* @Modified: October 20th, 2019 [5:30am]
+* @Modified: October 20th, 2019 [5:57am]
 * @Version:  1.0.0
 *
 * Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
@@ -57,7 +57,7 @@ TEST_CASE("QUASH::COMMANDS::hostname MANUAL CHECK", "[QUASH::COMMANDS][!mayfail]
   REQUIRE("IS THIS CORRECT?" == ret);
 }
 
-TEST_CASE("QUASH::COMMANDS::ps1 MANUAL CHECK", "[QUASH::COMMANDS][!mayfail]") {
+TEST_CASE("QUASH::COMMANDS::ps1 MANUAL CHECK", "[QUASH::COMMANDS]") {
   UTL::COLOR::setMode(UTL::COLOR::OFF);
   std::string ret = QUASH::COMMANDS::ps1();
   std::string expected =
@@ -68,6 +68,13 @@ TEST_CASE("QUASH::COMMANDS::ps1 MANUAL CHECK", "[QUASH::COMMANDS][!mayfail]") {
 TEST_CASE("QUASH::COMMANDS::pwd returns correct string", "[QUASH::COMMANDS]") {
   std::string ret = QUASH::COMMANDS::pwd();
   std::string expected = std_filesystem::current_path();
+  try {
+    char *homedir_chr = getenv("HOME");
+    if (homedir_chr != nullptr) {
+      std::string homedir_str = std::string(homedir_chr);
+      expected.replace(expected.find(homedir_str), homedir_str.length(), "~");
+    }
+  } catch (std::exception &) {}
   REQUIRE(expected == ret);
 }
 

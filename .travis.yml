@@ -28,22 +28,23 @@ matrix:
       before_install:
         - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
         - sudo apt-get update -q
-        - sudo apt-get install gcc-9 g++-9 -y
+        - sudo apt-get install gcc-9 g++-9 cppcheck -y
       env:
         - MATRIX_EVAL="CC=gcc-9 && CXX=g++-9"
       script:
         - make var CC=gcc-9 CXX=g++-9
         - make CC=gcc-9 CXX=g++-9
-        - make run-test CC=gcc-9 CXX=g++-9
+        - make test CC=gcc-9 CXX=g++-9
+        - ./quash-test
 
-    - name: Linux - Ubuntu - Bionic - GCC 9.2.0
+    - name: Linux - Ubuntu - Bionic - GCC 9.2.0 - cppcheck
       os: linux
       dist: bionic
       compiler: gcc
       before_install:
         - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
         - sudo apt-get update -q
-        - sudo apt-get install gcc-9 g++-9 -y
+        - sudo apt-get install gcc-9 g++-9 cppcheck -y
       env:
         - MATRIX_EVAL="CC=gcc-9 && CXX=g++-9"
       script:
@@ -60,21 +61,8 @@ matrix:
       script:
         - make var CC=gcc-9 CXX=g++-9
         - make CC=gcc-9 CXX=g++-9
-        - make run-test CC=gcc-9 CXX=g++-9
-
-    - name: Linux - Ubuntu - Bionic - cppcheck
-      os: linux
-      dist: bionic
-      compiler: gcc
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - cppcheck
-      script:
-        - make var
-        - make cppcheck
+        - make test CC=gcc-9 CXX=g++-9
+        - ./quash-test
 
 before_install:
   - eval "${MATRIX_EVAL}"
@@ -82,4 +70,5 @@ before_install:
 script:
   - make var
   - make
-  - make run-test
+  - make test CC=gcc-9 CXX=g++-9
+  - ./quash-test

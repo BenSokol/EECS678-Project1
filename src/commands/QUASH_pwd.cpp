@@ -3,7 +3,7 @@
 * @Author:   Ben Sokol <Ben>
 * @Email:    ben@bensokol.com
 * @Created:  September 25th, 2019 [5:41pm]
-* @Modified: October 20th, 2019 [5:30am]
+* @Modified: October 20th, 2019 [5:52am]
 * @Version:  1.0.0
 *
 * Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
@@ -33,7 +33,7 @@ namespace QUASH::COMMANDS {
       }
       std::string homedir_str = std::string(homedir_chr);
       pwd.replace(pwd.find(homedir_str), homedir_str.length(), "~");
-    } catch (std::exception) {}
+    } catch (std::exception &) {}
 
     return pwd;
   }
