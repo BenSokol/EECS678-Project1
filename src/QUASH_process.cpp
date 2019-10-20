@@ -3,7 +3,7 @@
 * @Author:   Ben Sokol <Ben>
 * @Email:    ben@bensokol.com
 * @Created:  October 9th, 2019 [2:24pm]
-* @Modified: October 19th, 2019 [6:36pm]
+* @Modified: October 20th, 2019 [6:07pm]
 * @Version:  1.0.0
 *
 * Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
@@ -11,6 +11,7 @@
 
 #include <algorithm>  // std::min
 #include <deque>      // std::deque
+#include <iostream>   // std::cerr
 #include <string>     // std::string
 #include <thread>     // std::thread
 
@@ -19,17 +20,16 @@
 #include "QUASH_process.hpp"
 
 #include "DBG_out.hpp"
+#include "QUASH_home.hpp"
 #include "QUASH_public.hpp"
+#include "QUASH_pwd.hpp"
 #include "QUASH_tokenizer.hpp"
 #include "UTL_assert.h"
 
 namespace QUASH {
 
   process::process(const std::deque<std::string> _tokens) :
-      status(STATUS_SUCCESS), errorMessage(""), async(true), done(false), pid(0), tokens(_tokens) {
-    // Should set default values of status, async, initDone, done
-    // check for async
-
+      status(STATUS_SUCCESS), p_status(0), errorMessage(""), async(true), done(false), pid(0), tokens(_tokens) {
     UTL_assert(tokens.size() > 0);
 
     for (size_t i = 0; i < tokens.size(); i++) {
@@ -43,32 +43,42 @@ namespace QUASH {
         }
         break;
       }
-      else if (tokens[i] == "exit") {
-        status = STATUS_COMMAND_SEMANTIC_ERROR;
-        errorMessage = "\'exit\' can only be called asynchronously.";
-      }
-      else if (tokens[i] == "quit") {
-        status = STATUS_COMMAND_SEMANTIC_ERROR;
-        errorMessage = "\'quit\' can only be called asynchronously.";
-      }
-      else if (tokens[i] == "logout") {
-        status = STATUS_COMMAND_SEMANTIC_ERROR;
-        errorMessage = "\'logout\' can only be called asynchronously.";
-      }
-      else if (tokens[i] == "kill") {
-        status = STATUS_COMMAND_SEMANTIC_ERROR;
-        errorMessage = "\'kill\' can only be called asynchronously.";
-      }
-      else if (tokens[i] == "jobs") {
-        status = STATUS_COMMAND_SEMANTIC_ERROR;
-        errorMessage = "\'jobs\' can only be called asynchronously.";
-      }
       else if (tokens[i] == "|") {
         pipes.push_back(new int[2]);
         int pStatus = pipe(pipes.back());
         if (pStatus != 0) {
           errorMessage = "Failed to create pipe.";
           UTL_assert_always();
+        }
+      }
+    }
+
+    if (!async) {
+      for (size_t i = 0; i < tokens.size(); i++) {
+        if (tokens[i] == "exit") {
+          status = STATUS_COMMAND_SEMANTIC_ERROR;
+          errorMessage = "\'exit\' can only be called asynchronously.";
+          break;
+        }
+        else if (tokens[i] == "quit") {
+          status = STATUS_COMMAND_SEMANTIC_ERROR;
+          errorMessage = "\'quit\' can only be called asynchronously.";
+          break;
+        }
+        else if (tokens[i] == "logout") {
+          status = STATUS_COMMAND_SEMANTIC_ERROR;
+          errorMessage = "\'logout\' can only be called asynchronously.";
+          break;
+        }
+        else if (tokens[i] == "kill") {
+          status = STATUS_COMMAND_SEMANTIC_ERROR;
+          errorMessage = "\'kill\' can only be called asynchronously.";
+          break;
+        }
+        else if (tokens[i] == "jobs") {
+          status = STATUS_COMMAND_SEMANTIC_ERROR;
+          errorMessage = "\'jobs\' can only be called asynchronously.";
+          break;
         }
       }
     }
@@ -105,12 +115,10 @@ namespace QUASH {
 
     tid = std::this_thread::get_id();
 
-    size_t begCommand = 0;
-    size_t endCommand = 0;
     size_t i = 0;
 
     while (i < tokens.size()) {
-      begCommand = i;
+      std::deque<std::string> currentCommand;
 
       bool foundPipe = false;
 
@@ -123,80 +131,131 @@ namespace QUASH {
           foundPipe = true;
           break;
         }
-        endCommand = i;
+        currentCommand.push_back(tokens[i]);
       }
 
-      UTL_assert(begCommand <= endCommand);
+      UTL_assert(currentCommand.size() > 0);
       if (DBG::out::instance().enabled()) {
-        DBG_print("Running command [",
-                  begCommand,
-                  ", ",
-                  endCommand,
-                  "]: \n",
-                  QUASH::Tokenizer::str(std::deque<std::string>(tokens.begin() + static_cast<char>(begCommand),
-                                                                tokens.begin() + static_cast<char>(endCommand)),
-                                        false),
-                  "\n");
+        DBG_print("Running command:\n", QUASH::Tokenizer::str(currentCommand, false));
         DBG::out::instance().wait();
       }
 
-      //
-      // if (piped == true) {
-      //   call pipedInputs?
-      // }
-      //
-      // //put I/O redirection here?
-      // execv(tokens[0], arguments);
+      if (currentCommand[0] == "exit" || currentCommand[0] == "quit" || currentCommand[0] == "logout") {
+        status = STATUS_EXIT_NORMAL;
+        return;
+      }
+      else if (currentCommand[0] == "kill") {
+        //if the id that is passed to kill is a jobid that is currently
+        //being used, map it to a processid then kill it
+        //otherwise use the built-in kill process
 
-      // if (tokens[0] == "exit" || tokens[0] == "quit" || tokens[0] == "logout") {
-      //   status = STATUS_EXIT_NORMAL;
-      // }
-      // else if (tokens[0] == "kill") {
-      //   //if the id that is passed to kill is a jobid that is currently
-      //   //being used, map it to a processid then kill it
-      //   //otherwise use the built-in kill process
-      //
-      //   //int jobID = atoi(tokens[1]);
-      //   /*for(int i == 0; i<processes().size; i++)
-      //   {
-      //     if(i == jobID)
-      //     {
-      //       //kill the process with that JobID
-      //     }
-      //     else
-      //     {
-      //       general kill command
-      //     }
-      //   }
-      //   */
-      // }
-      // else if (tokens[0] == "cd") {
-      //   //if(tokens.size() !> 1)
-      //   //{
-      //   //change directory to home directory
-      //   //}
-      //   //else
-      //   //{
-      //   //  std::string newDir = tokens[1];
-      //   //  set to new directory
-      //   //}
-      // }
-      // else if (tokens[0] == "jobs") {
-      //   //status = STATUS_COMMAND_JOBS;
-      //   //int jobID = atoi(tokens[1]);
-      //   /*for(int i == 0; i<processes().size; i++)
-      //   {
-      //     std::cout << "[" << i << "] " << processes()[i].tokens[1];
-      //   }
-      //   */
-      // }
-      // else if (tokens[0] == "set") {
-      //   //status = STATUS_COMMAND_SET;
-      // }
-      // else if (tokens[0] == "help") {
-      //   //status = STATUS_COMMAND_HELP;
-      //   //std::cout <<
-      // }
+        //int jobID = atoi(currentCommand[1]);
+        /*for(int i == 0; i<processes().size; i++)
+        {
+          if(i == jobID)
+          {
+            //kill the process with that JobID
+          }
+          else
+          {
+            general kill command
+          }
+        }
+        */
+      }
+      else if (currentCommand[0] == "cd") {
+        if (currentCommand.size() > 2) {
+          std::cerr << "-quash: cd: too many arguments\n";
+          status = STATUS_COMMAND_RUNTIME_ERROR;
+          return;
+        }
+        else {
+          if (currentCommand.size() == 1) {
+            // Changing directory to home
+            const char* dir = QUASH::COMMANDS::home();
+
+            if (DBG::out::instance().enabled()) {
+              DBG_print("Changing directories to: ", dir, "\n");
+              DBG::out::instance().wait();
+            }
+
+            p_status = chdir(dir);
+          }
+          else {
+            if (currentCommand[1][0] == '/') {
+              // Changing directory to root
+              const char* dir = currentCommand[1].c_str();
+              if (DBG::out::instance().enabled()) {
+                DBG_print("Changing directories to: ", dir, "\n");
+                DBG::out::instance().wait();
+              }
+              p_status = chdir(dir);
+            }
+            else if (currentCommand[1][0] == '~') {
+              // Changing directory to home path
+              std::string str = std::string(QUASH::COMMANDS::home()) + currentCommand[1].substr(1);
+              const char* dir = str.c_str();
+              if (DBG::out::instance().enabled()) {
+                DBG_print("Changing directories to: ", dir, "\n");
+                DBG::out::instance().wait();
+              }
+              p_status = chdir(dir);
+            }
+            else {
+              std::string str = QUASH::COMMANDS::pwd(false) + "/" + currentCommand[1];
+              const char* dir = str.c_str();
+              if (DBG::out::instance().enabled()) {
+                DBG_print("Changing directories to: ", dir, "\n");
+                DBG::out::instance().wait();
+              }
+              p_status = chdir(dir);
+            }
+          }
+
+          if (p_status != 0) {
+            status = STATUS_COMMAND_RUNTIME_ERROR;
+            return;
+          }
+        }
+      }
+      else if (currentCommand[0] == "jobs") {
+        for (size_t j = 0; QUASH::process::processes().size(); ++j) {
+          std::cout << "[" << j << "]\t" << QUASH::process::processes()[j]->pid << "\t"
+                    << "running"
+                    << "\t";
+          std::cout << QUASH::Tokenizer::str(QUASH::process::processes()[j]->tokens, true);
+          std::cout << "\n";
+        }
+      }
+      else if (currentCommand[0] == "set") {
+        if (currentCommand.size() != 3) {
+          std::cerr << "-quash: set: expected 2 arguments [NAME] [VALUE]\n";
+          status = STATUS_COMMAND_RUNTIME_ERROR;
+          return;
+        }
+        else {
+          p_status = setenv(currentCommand[1].c_str(), currentCommand[2].c_str(), 1);
+
+          if (p_status != 0) {
+            status = STATUS_COMMAND_RUNTIME_ERROR;
+            return;
+          }
+        }
+      }
+      else if (currentCommand[0] == "help") {
+        //status = STATUS_COMMAND_HELP;
+        //std::cout <<
+      }
+      else {
+        // if (0 == fork()) {
+        //   // Child
+        //   // call exec if not custom command
+        // }
+        // else {
+        //   // Parent
+        //   // wait for child
+        // }
+      }
     }
   }
 

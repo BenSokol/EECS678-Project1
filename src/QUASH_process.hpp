@@ -3,7 +3,7 @@
 * @Author:   Ben Sokol <Ben>
 * @Email:    ben@bensokol.com
 * @Created:  October 9th, 2019 [2:29pm]
-* @Modified: October 20th, 2019 [1:34am]
+* @Modified: October 20th, 2019 [4:15pm]
 * @Version:  1.0.0
 *
 * Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
@@ -41,6 +41,7 @@ namespace QUASH {
 
   protected:
     quash_status_t status;     // Status
+    intmax_t p_status;         // Process status
     std::string errorMessage;  // Message if error occured.
 
     std::vector<int *> pipes;

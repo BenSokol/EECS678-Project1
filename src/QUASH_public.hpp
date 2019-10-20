@@ -3,7 +3,7 @@
 * @Author:   Ben Sokol <Ben>
 * @Email:    ben@bensokol.com
 * @Created:  September 23rd, 2019 [7:20pm]
-* @Modified: October 18th, 2019 [11:24am]
+* @Modified: October 20th, 2019 [5:56pm]
 * @Version:  1.0.0
 *
 * Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
@@ -31,6 +31,7 @@ namespace QUASH {
     STATUS_COMMAND_NOT_FOUND,  // Not Used
     STATUS_COMMAND_SYNTAX_ERROR,
     STATUS_COMMAND_SEMANTIC_ERROR,
+    STATUS_COMMAND_RUNTIME_ERROR,
 
     STATUS_EXIT_NORMAL,
     STATUS_EXIT_ERROR_NAME,  // Not Used

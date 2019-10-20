@@ -3,7 +3,7 @@
 * @Author:   Ben Sokol <Ben>
 * @Email:    ben@bensokol.com
 * @Created:  September 25th, 2019 [5:49pm]
-* @Modified: October 2nd, 2019 [10:30pm]
+* @Modified: October 20th, 2019 [4:25pm]
 * @Version:  1.0.0
 *
 * Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
@@ -15,7 +15,7 @@
 #include <string>  // std::string
 
 namespace QUASH::COMMANDS {
-  const std::string home();
+  const char* home();
 }  // namespace QUASH::COMMANDS
 
 #endif

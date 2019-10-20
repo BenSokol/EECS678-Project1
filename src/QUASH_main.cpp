@@ -3,7 +3,7 @@
 * @Author:   Ben Sokol <Ben>
 * @Email:    ben@bensokol.com
 * @Created:  September 23rd, 2019 [8:00pm]
-* @Modified: October 20th, 2019 [5:13am]
+* @Modified: October 20th, 2019 [5:56pm]
 * @Version:  1.0.0
 *
 * Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
@@ -149,14 +149,14 @@ namespace QUASH {
           DBG_printv(1, "Tokenizer was successful\n");
           break;
         case STATUS_TOKENIZER_MISSING_CLOSE_SINGLE_QUOTE:
-          DBG_printf("ERROR: Found unmatched closing single quote.\n");
+          DBG_print("ERROR: Found unmatched closing single quote.\n");
           if (!DBG::out::instance().enabled()) {
             std::cerr << "ERROR: Found unmatched closing single quote.\n";
           }
           continue;
 
         case STATUS_TOKENIZER_MISSING_CLOSE_DOUBLE_QUOTE:
-          DBG_printf("ERROR: Found unmatched closing single quote.\n");
+          DBG_print("ERROR: Found unmatched closing single quote.\n");
           if (!DBG::out::instance().enabled()) {
             std::cerr << "ERROR: Found unmatched closing single quote.\n";
           }
@@ -168,7 +168,7 @@ namespace QUASH {
           }
           std::cerr << "ERROR: Unknown error from Tokenizer. Exiting...\n";
           if (DBG::out::instance().enabled()) {
-            DBG_printf("ERROR: Unknown error from Tokenizer. Exiting...\n");
+            DBG_print("ERROR: Unknown error from Tokenizer. Exiting...\n");
             DBG::out::instance().wait();
           }
           exit(retTokenizer.first);
@@ -194,15 +194,23 @@ namespace QUASH {
           DBG_printv(1, "Process creation was successful\n");
           break;
         case STATUS_COMMAND_SYNTAX_ERROR:
-          DBG_printf("ERROR: ", p->errorMessage, "\n");
-          if (!DBG::out::instance().enabled()) {
+          if (DBG::out::instance().enabled()) {
+            DBG_print("ERROR: ", p->errorMessage, "\n");
+            DBG::out::instance().wait();
+            delete p;
+          }
+          else {
             std::cerr << "ERROR: " << p->errorMessage << "\n";
           }
           continue;
 
         case STATUS_COMMAND_SEMANTIC_ERROR:
-          DBG_printf("ERROR: ", p->errorMessage, "\n");
-          if (!DBG::out::instance().enabled()) {
+          if (DBG::out::instance().enabled()) {
+            DBG_print("ERROR: ", p->errorMessage, "\n");
+            DBG::out::instance().wait();
+            delete p;
+          }
+          else {
             std::cerr << "ERROR: " << p->errorMessage << "\n";
           }
           continue;
@@ -213,7 +221,7 @@ namespace QUASH {
           }
           std::cerr << "ERROR: Unknown error from Process Creation. Exiting...\n";
           if (DBG::out::instance().enabled()) {
-            DBG_printf("ERROR: Unknown error from Process Creation. Exiting...\n");
+            DBG_print("ERROR: Unknown error from Process Creation. Exiting...\n");
             DBG::out::instance().wait();
           }
           exit(p->status);
@@ -240,13 +248,18 @@ namespace QUASH {
             }
             exit(0);
 
+          case STATUS_COMMAND_RUNTIME_ERROR:
+            std::cout << "TODO!!!\n";
+            // TODO: Handle
+            break;
+
           default:
             if (DBG::out::instance().enabled()) {
               DBG::out::instance().wait();
             }
             std::cerr << "ERROR: Unknown error from Process Creation. Exiting...\n";
             if (DBG::out::instance().enabled()) {
-              DBG_printf("ERROR: Unknown error from Process Creation. Exiting...\n");
+              DBG_print("ERROR: Unknown error from Process Creation. Exiting...\n");
               DBG::out::instance().wait();
             }
             exit(cmdStatus);
