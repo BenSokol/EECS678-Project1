@@ -3,7 +3,7 @@
 * @Author:   Ben Sokol <Ben>
 * @Email:    ben@bensokol.com
 * @Created:  October 20th, 2019 [6:09pm]
-* @Modified: October 21st, 2019 [5:46am]
+* @Modified: October 21st, 2019 [5:53am]
 * @Version:  1.0.0
 *
 * Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
@@ -68,12 +68,12 @@ TEST_CASE("QUASH::process::cd", "[QUASH::process]") {
   }
 
 
-  SECTION("QUASH::process cd - ~/Desktop then back ~/") {
-    std::deque<std::string> tokens1 = { "cd", "~/Desktop" };
+  SECTION("QUASH::process cd - ~/.config then back ~/") {
+    std::deque<std::string> tokens1 = { "cd", "~/.config" };
     QUASH::process p1(tokens1, TEST_env, QUASH::mProcesses);
     p1.start();
-    REQUIRE("~/Desktop" == QUASH::COMMANDS::pwd(true));
-    REQUIRE((std::string(QUASH::COMMANDS::home()) + "/Desktop") == QUASH::COMMANDS::pwd(false));
+    REQUIRE("~/.config" == QUASH::COMMANDS::pwd(true));
+    REQUIRE((std::string(QUASH::COMMANDS::home()) + "/.config") == QUASH::COMMANDS::pwd(false));
 
     std::deque<std::string> tokens2 = { "cd", "~/" };
     QUASH::process p2(tokens2, TEST_env, QUASH::mProcesses);
