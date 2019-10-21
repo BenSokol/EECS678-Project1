@@ -3,7 +3,7 @@
 * @Author:   Ben Sokol <Ben>
 * @Email:    ben@bensokol.com
 * @Created:  September 23rd, 2019 [8:00pm]
-* @Modified: October 20th, 2019 [5:56pm]
+* @Modified: October 20th, 2019 [7:48pm]
 * @Version:  1.0.0
 *
 * Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
@@ -25,6 +25,7 @@
 #include "QUASH_main.hpp"
 
 #include "DBG_out.hpp"          // DBG::out::instance(), DBG_print, etc.
+#include "QUASH_home.hpp"       // QUASH::COMMANDS::home()
 #include "QUASH_hostname.hpp"   // QUASH::COMMANDS::hostname()
 #include "QUASH_process.hpp"    // QUASH::process
 #include "QUASH_ps1.hpp"        // QUASH::COMMANDS::ps1()
@@ -60,9 +61,9 @@ namespace QUASH {
 
     DBG_printv(1, "Finished Quash Initialization\n");
     DBG_printv(1, "Debug Information:\n");
-    DBG_printv(1, "HOME     = ", mEnv["HOME"], "\n");
+    DBG_printv(1, "HOME     = ", QUASH::COMMANDS::home(), "\n");
     DBG_printv(1, "HOSTNAME = ", QUASH::COMMANDS::hostname(), "\n");
-    DBG_printv(1, "PATH     = ", mEnv["PATH"], "\n");
+    DBG_printv(1, "PATH     = ", getenv("PATH"), "\n");
     DBG_printv(1, "PWD      = ", QUASH::COMMANDS::pwd(), "\n");
     DBG_printv(1, "USERNAME = ", QUASH::COMMANDS::whoami(), "\n");
   }
@@ -79,11 +80,6 @@ namespace QUASH {
     if (mDisplayUsage || mStatus != STATUS_SUCCESS) {
       usage();
       return mStatus;
-    }
-
-    if (mPrintEnv) {
-      DBG_printv(1, "Printing environment variables\n");
-      printEnv();
     }
 
     DBG_print("Starting Quash...\n");
@@ -411,23 +407,7 @@ namespace QUASH {
 
 
   void main::initEnv(char **envp) {
-    for (char **env = const_cast<char **>(envp); *env != nullptr; env++) {
-      std::string row = *env;
-      size_t sep = row.find_first_of("=");
-      if (sep == std::string::npos) {
-        mEnv.insert(std::pair<std::string, std::string>(row.substr(0, row.size() - 1), ""));
-      }
-      else {
-        mEnv.insert(std::pair<std::string, std::string>(row.substr(0, sep), row.substr(sep + 1)));
-      }
-    }
-  }
-
-
-  void main::printEnv() const {
-    for (auto &env : mEnv) {
-      std::cout << env.first << " = " << env.second << "\n";
-    }
+    QUASH::mEnv = envp;
   }
 
 
