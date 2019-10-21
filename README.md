@@ -14,7 +14,7 @@ See [here](https://github.com/BenSokol/EECS678-Project1/blob/master/report.md).
 |             |          Prefered          |          Required          |
 | ----------- | -------------------------- | -------------------------- |
 | OS          |                            | Linux<br>macOS             |
-| Compiler    | gcc >= 9<br>clang >= 9     | gcc >= 8<br>clang >= 7     |
+| Compiler    |                            | gcc >= 9<br>clang >= 9     |
 | C Version   |                            | c11                        |
 | C++ Version | c++2a                      | c++17                      |
 
