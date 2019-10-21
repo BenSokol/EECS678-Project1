@@ -3,7 +3,7 @@
 * @Author:   Ben Sokol <Ben>
 * @Email:    ben@bensokol.com
 * @Created:  September 23rd, 2019 [7:59pm]
-* @Modified: October 20th, 2019 [8:47pm]
+* @Modified: October 20th, 2019 [11:36pm]
 * @Version:  1.0.0
 *
 * Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
@@ -18,6 +18,7 @@
 #include <map>     // std::map
 #include <string>  // std::string
 
+#include "QUASH_process.hpp"
 #include "QUASH_public.hpp"
 
 namespace QUASH {

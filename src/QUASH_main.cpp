@@ -3,7 +3,7 @@
 * @Author:   Ben Sokol <Ben>
 * @Email:    ben@bensokol.com
 * @Created:  September 23rd, 2019 [8:00pm]
-* @Modified: October 20th, 2019 [8:47pm]
+* @Modified: October 21st, 2019 [1:09am]
 * @Version:  1.0.0
 *
 * Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
@@ -38,7 +38,11 @@
 #include "UTL_trim.hpp"         // UTL::trim
 
 namespace QUASH {
+
+  std::pair<std::deque<std::shared_ptr<process>>, std::mutex> *mProcesses;
+
   main::main() : mPrintEnv(false), mDisplayUsage(false), mStatus(STATUS_SUCCESS) {
+    mProcesses = new std::pair<std::deque<std::shared_ptr<process>>, std::mutex>();
   }
 
   void main::init(int argc, char **argv, char **envp) {
@@ -137,7 +141,7 @@ namespace QUASH {
       }
 
       // Tokenize input string
-      std::pair<quash_status_t, std::deque<std::string> > retTokenizer = Tokenizer::Tokenize(input_string);
+      std::pair<quash_status_t, std::deque<std::string>> retTokenizer = Tokenizer::Tokenize(input_string);
 
       // Handle status from tokenize
       switch (retTokenizer.first) {
@@ -183,7 +187,7 @@ namespace QUASH {
 
 
       // Create new process
-      process *p = new process(retTokenizer.second, mEnv);
+      std::shared_ptr<process> p(new process(retTokenizer.second, mEnv, mProcesses));
 
       switch (p->status) {
         case STATUS_SUCCESS:
@@ -193,7 +197,6 @@ namespace QUASH {
           if (DBG::out::instance().enabled()) {
             DBG_print("ERROR: ", p->errorMessage, "\n");
             DBG::out::instance().wait();
-            delete p;
           }
           else {
             std::cerr << "ERROR: " << p->errorMessage << "\n";
@@ -204,7 +207,6 @@ namespace QUASH {
           if (DBG::out::instance().enabled()) {
             DBG_print("ERROR: ", p->errorMessage, "\n");
             DBG::out::instance().wait();
-            delete p;
           }
           else {
             std::cerr << "ERROR: " << p->errorMessage << "\n";
@@ -230,12 +232,25 @@ namespace QUASH {
       if (p->async) {
         quash_status_t cmdStatus = p->status;
         std::string cmdErrorMessage = p->errorMessage;
-        delete p;
 
         switch (cmdStatus) {
           case STATUS_SUCCESS:
             DBG_printv(1, "Process was successful\n");
             break;
+
+          case STATUS_COMMAND_PRINT_JOBS:
+          {
+            std::unique_lock<std::mutex> lock(mProcesses->second);
+            for (size_t j = 0; j < mProcesses->first.size(); ++j) {
+              if (mProcesses->first[j]) {
+                std::cout << "[" << j + 1 << "]\t" << mProcesses->first[j]->pid << "\t"
+                          << "Running\t";
+                std::cout << QUASH::Tokenizer::str(mProcesses->first[j]->tokens, true);
+                std::cout << "\n";
+              }
+            }
+            break;
+          }
 
           case STATUS_EXIT_NORMAL:
             if (DBG::out::instance().enabled()) {
@@ -245,8 +260,10 @@ namespace QUASH {
             exit(0);
 
           case STATUS_COMMAND_RUNTIME_ERROR:
-            std::cout << "TODO!!!\n";
-            // TODO: Handle
+            break;
+
+          case STATUS_COMMAND_NOT_FOUND:
+            std::cout << cmdErrorMessage << "\n";
             break;
 
           default:
@@ -263,7 +280,14 @@ namespace QUASH {
       }
       else {
         // Add process to vector of processes
-        QUASH::process::processes().push_back(p);
+        DBG_printv(1, "Adding process to vector\n");
+        std::unique_lock<std::mutex> lock(mProcesses->second);
+        mProcesses->first.push_back(p);
+        std::cout << "[" << mProcesses->first.size() << "]\t";
+        std::cout << p->pid << "\t";
+        std::cout << "Started\t";
+        std::cout << QUASH::Tokenizer::str(p->tokens, true);
+        std::cout << "\n" << std::flush;
       }
     }
 
@@ -277,20 +301,26 @@ namespace QUASH {
 
   void main::checkJobStatus() {
     bool debugWait = DBG::out::instance().enabled();
-    for (std::vector<process *>::iterator it = QUASH::process::processes().begin();
-         it != QUASH::process::processes().end();
+    size_t i = 0;
+
+    std::unique_lock<std::mutex> lock(mProcesses->second);
+    for (std::deque<std::shared_ptr<process>>::iterator it = mProcesses->first.begin(); it != mProcesses->first.end();
          ++it) {
+      i++;
+      if ((*it) == nullptr) {
+        continue;
+      }
       if ((*it)->done == true) {
         if (debugWait) {
           DBG::out::instance().wait();
           debugWait = false;
         }
-        std::cout << "[" << std::distance(QUASH::process::processes().begin(), it) << "]\t" << (*it)->pid << "\t"
-                  << ((*it)->status == STATUS_SUCCESS ? "DONE" : "Exit " + std::to_string((*it)->status)) << "\t";
+        std::cout << "[" << i << "]\t";
+        std::cout << (*it)->pid << "\t";
+        std::cout << ((*it)->status == STATUS_SUCCESS ? "Done" : "Exit " + std::to_string((*it)->p_status)) << "\t";
         std::cout << QUASH::Tokenizer::str((*it)->tokens, true);
-        std::cout << "\n";
-        delete (*it);
-        QUASH::process::processes().erase(it);
+        std::cout << "\n" << std::flush;
+        mProcesses->first.erase(it);
       }
     }
   }
@@ -304,20 +334,7 @@ namespace QUASH {
 
 
   [[noreturn]] void main::signalHandlerSIGINT(int) {
-    // DBG_write(false, false, true, false, "\n");
     DBG_print("CTRL-C detected\n");
-
-    // Kill currently running process.
-    // Currently running process will always be last process in the QUASH::process::processes() vector.
-    // Only kill it if it is running asynchronously.
-    if (!QUASH::process::processes().empty() && QUASH::process::processes().back()->async
-        && (QUASH::process::processes().back()->pid > 0)) {
-      DBG_print("Canceling ", QUASH::Tokenizer::str(QUASH::process::processes().back()->tokens, true), "\n");
-      if (kill(QUASH::process::processes().back()->pid, SIGINT)) {
-        DBG_print("Warning: kill failed...\n");
-      }
-    }
-
     std::cout << "\n";
     longjmp(QUASH::main::instance().mJumpBufferSIGINT, 1);
   }

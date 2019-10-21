@@ -3,7 +3,7 @@
 * @Author:   Ben Sokol <Ben>
 * @Email:    ben@bensokol.com
 * @Created:  October 9th, 2019 [2:24pm]
-* @Modified: October 20th, 2019 [9:42pm]
+* @Modified: October 21st, 2019 [1:34am]
 * @Version:  1.0.0
 *
 * Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
@@ -12,6 +12,8 @@
 // clang-format off
 #include <sys/cdefs.h>
 // clang-format on
+
+#include <csignal>  // kill
 
 #include <algorithm>  // std::min
 #include <deque>      // std::deque
@@ -23,6 +25,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+#include "UTL_inputValidation.hpp"
 #include "DBG_out.hpp"
 #include "QUASH_cd.hpp"
 #include "QUASH_home.hpp"
@@ -32,9 +35,26 @@
 #include "QUASH_tokenizer.hpp"
 #include "UTL_assert.h"
 
+#if __has_include(<filesystem>)
+  #include <filesystem>
+  #ifndef std_filesystem
+    #define std_filesystem std::filesystem
+  #endif
+#elif __has_include(<experimental/filesystem>)
+  #include <experimental/filesystem>
+  #ifndef std_filesystem
+    #define std_filesystem std::experimental::filesystem
+  #endif
+#else
+  #error Requires std::filesystem or std::experimental::filesystem
+#endif
+
 namespace QUASH {
 
-  process::process(std::deque<std::string> _tokens, char** envp) :
+  process::process(std::deque<std::string> _tokens,
+                   char** envp,
+                   std::pair<std::deque<std::shared_ptr<process>>, std::mutex>* processes) :
+      mProcesses(processes),
       status(STATUS_SUCCESS),
       p_status(0),
       errorMessage(""),
@@ -117,16 +137,8 @@ namespace QUASH {
 
 
   void process::command() {
-    // Bulk of work:
-    //   can create new process started on process::thread that can be run
-    //   needs to handle setting status
-    //   handle internal quash commands (perhaps using seperate function)
-    //     example: quit, exit, help, set, cd, jobs
-    //     Possible extra commands: alias, unalias
-    //   I/O Redirection >/</>>/<<
-    // Should fork/exec call
-
     if (status != STATUS_SUCCESS) {
+      done = true;
       UTL_assert_always();
       return;
     }
@@ -160,45 +172,65 @@ namespace QUASH {
 
       if (currentCommand[0] == "exit" || currentCommand[0] == "quit" || currentCommand[0] == "logout") {
         status = STATUS_EXIT_NORMAL;
+        done = true;
         return;
       }
       else if (currentCommand[0] == "kill") {
-        //if the id that is passed to kill is a jobid that is currently
-        //being used, map it to a processid then kill it
-        //otherwise use the built-in kill process
-
-        //int jobID = atoi(currentCommand[1]);
-        /*for(int i == 0; i<processes().size; i++)
-        {
-          if(i == jobID)
-          {
-            //kill the process with that JobID
-          }
-          else
-          {
-            general kill command
-          }
+        if (currentCommand.size() != 3) {
+          std::cerr << "-quash: kill: expected 2 arguments [JOBID] [SIGNUM]\n";
+          status = STATUS_COMMAND_RUNTIME_ERROR;
+          done = true;
+          return;
         }
-        */
+        if (!UTL::isNumber(currentCommand[1])
+            || !UTL::isNumber(currentCommand[2], std::numeric_limits<int>::min(), std::numeric_limits<int>::max())) {
+          std::cerr << "-quash: kill: expected 2 arguments [JOBID] [SIGNUM]\nusage: kill [JOBID] [SIGNUM]\n";
+          status = STATUS_COMMAND_RUNTIME_ERROR;
+          done = true;
+          return;
+        }
+        int kill_jobid = std::stoi(currentCommand[1]);
+        int kill_signum = std::stoi(currentCommand[2]);
+        std::unique_lock<std::mutex> lock(mProcesses->second);
+        if (mProcesses->first.empty()) {
+          std::cerr << "-quash: kill: No processes are running.\nusage: kill [JOBID] [SIGNUM]\n";
+          status = STATUS_COMMAND_RUNTIME_ERROR;
+          done = true;
+          return;
+        }
+        if (mProcesses->first.size() < static_cast<size_t>(kill_jobid)
+            || mProcesses->first[static_cast<size_t>(kill_jobid) - 1] == nullptr) {
+          std::cerr << "-quash: kill: JOBID out of range\nusage: kill [JOBID] [SIGNUM]\n";
+          status = STATUS_COMMAND_RUNTIME_ERROR;
+          done = true;
+          return;
+        }
+
+        std::cout << "Sending signal " << currentCommand[2] << " to job " << currentCommand[1];
+        std::cout << "\t" << QUASH::Tokenizer::str(mProcesses->first.back()->tokens, true) << "\n";
+        if (kill(mProcesses->first[static_cast<size_t>(kill_jobid) - 1]->pid, kill_signum) == 0) {
+          mProcesses->first.erase(mProcesses->first.begin() + static_cast<long>(kill_jobid) - 1);
+        }
+        else {
+          DBG_print("Warning: kill failed...\n");
+        }
       }
       else if (currentCommand[0] == "cd") {
         if (!QUASH::COMMANDS::cd(currentCommand, status, p_status)) {
+          done = true;
           return;
         }
       }
       else if (currentCommand[0] == "jobs") {
-        for (size_t j = 0; QUASH::process::processes().size(); ++j) {
-          std::cout << "[" << j << "]\t" << QUASH::process::processes()[j]->pid << "\t"
-                    << "running"
-                    << "\t";
-          std::cout << QUASH::Tokenizer::str(QUASH::process::processes()[j]->tokens, true);
-          std::cout << "\n";
-        }
+        status = STATUS_COMMAND_PRINT_JOBS;
+        done = true;
+        return;
       }
       else if (currentCommand[0] == "set") {
         if (currentCommand.size() != 3) {
           std::cerr << "-quash: set: expected 2 arguments [NAME] [VALUE]\n";
           status = STATUS_COMMAND_RUNTIME_ERROR;
+          done = true;
           return;
         }
         else {
@@ -206,6 +238,7 @@ namespace QUASH {
 
           if (p_status != 0) {
             status = STATUS_COMMAND_RUNTIME_ERROR;
+            done = true;
             return;
           }
         }
@@ -218,9 +251,9 @@ namespace QUASH {
         if (mEnv == nullptr) {
           UTL_assert_always();
         }
-#if __APPLE__
-        std::string PATH = "";
 
+        // Find PATH from mEnv if on macOS
+        std::string PATH = "";
         for (char** env = const_cast<char**>(mEnv); *env != nullptr; env++) {
           std::string row = *env;
           size_t sep = row.find_first_of("=");
@@ -232,10 +265,45 @@ namespace QUASH {
           }
         }
 
-        // for (size_t j = 0; i < )
-#endif
-        pid_t pid_1 = fork();
-        if (pid_1 == 0) {
+        // Convert ~ to HOME (as long as ~ is not first character in string)
+        for (size_t j = 0; j < currentCommand.size(); ++j) {
+          if (currentCommand[j][0] == '~') {
+            std::string newCommand = QUASH::COMMANDS::home();
+            if (currentCommand[j].size() > 1) {
+              newCommand += currentCommand[j].substr(1);
+            }
+            currentCommand[j] = newCommand;
+          }
+        }
+
+        bool found = false;
+        std::stringstream ss;
+        ss << PATH;
+        std::string str;
+        while (getline(ss, str, ':')) {
+          std_filesystem::path fs_path = str + "/" + currentCommand[0];
+          if (std_filesystem::exists(fs_path)) {
+            found = true;
+            break;
+          }
+        }
+
+        std_filesystem::path fs_path = std_filesystem::current_path();
+        fs_path += "/";
+        fs_path += currentCommand[0];
+        if (std_filesystem::exists(fs_path)) {
+          found = true;
+        }
+
+        if (!found) {
+          status = STATUS_COMMAND_NOT_FOUND;
+          errorMessage = "Command \'" + currentCommand[0] + "\' not found.";
+          done = true;
+          return;
+        }
+
+        pids.push_back(fork());
+        if (pids.back() == 0) {
           // child
           std::vector<char*> argv_list;
           std::transform(
@@ -247,27 +315,66 @@ namespace QUASH {
 
           argv_list.push_back(nullptr);
 
+          size_t thisProcess = 0;
+          for (size_t j = 0; j < pids.size(); ++j) {
+            if (pids[j] == 0) {
+              thisProcess = j;
+            }
+          }
+
+          if (thisProcess != pipes.size()) {
+            dup2(pipes[thisProcess][1], STDOUT_FILENO);
+          }
+
+          if (thisProcess != 0) {
+            dup2(pipes[thisProcess - 1][0], STDIN_FILENO);
+          }
+
+          for (size_t j = 0; j < pipes.size(); ++j) {
+            if (j == thisProcess) {
+              close(pipes[j][0]);
+            }
+            else if (j + 1 == thisProcess && thisProcess != 0) {
+              close(pipes[j][1]);
+            }
+            else {
+              close(pipes[j][0]);
+              close(pipes[j][1]);
+            }
+          }
+
 #if __APPLE__
           execvP(currentCommand[0].c_str(), PATH.c_str(), const_cast<char**>(argv_list.data()));
 #else
           execvpe(currentCommand[0].c_str(), const_cast<char**>(argv_list.data()), mEnv);
 #endif
         }
-        else {
-          // Parent
-          // wait for child
-          int wait_status;
-          waitpid(pid_1, &wait_status, 0);
-
-          p_status = wait_status;
-
-          if (p_status != 0) {
-            status = STATUS_COMMAND_RUNTIME_ERROR;
-            return;
-          }
-        }
       }
     }
+
+    // Parent
+    mProcessStartedCondition.notify_one();
+
+    if (pids.size() > 0) {
+      pid = pids.front();
+    }
+
+    std::for_each(pipes.begin(), pipes.end(), [](int* p) {
+      close(p[0]);
+      close(p[1]);
+    });
+
+    int wait_status;
+    waitpid(pid, &wait_status, 0);
+
+    p_status = wait_status;
+
+    if (p_status != 0) {
+      status = STATUS_COMMAND_RUNTIME_ERROR;
+      return;
+    }
+
+    done = true;
   }  // namespace QUASH
 
   // void pipeInputs(const std::deque<std::string> newTokens, process* pipedProcess) {
@@ -291,6 +398,8 @@ namespace QUASH {
     }
     else {
       thread = std::thread(&process::command, this);
+      std::unique_lock<std::mutex> lock(mProcessStartedMutex);
+      mProcessStartedCondition.wait(lock);
     }
   }
 }  // namespace QUASH
