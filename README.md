@@ -7,6 +7,9 @@ The project specification is located [here](https://web.archive.org/web/20190925
 ## Feature status
 See [here](https://github.com/BenSokol/EECS678-Project1/blob/master/FEATURES.md).
 
+## Report
+See [here](https://github.com/BenSokol/EECS678-Project1/blob/master/report.md).
+
 ## Requirements
 |             |          Prefered          |          Required          |
 | ----------- | -------------------------- | -------------------------- |
