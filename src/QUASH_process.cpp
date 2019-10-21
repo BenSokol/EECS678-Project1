@@ -18,6 +18,7 @@
 #include <iostream>   // std::cerr
 #include <string>     // std::string
 #include <thread>     // std::thread
+#include <cstring>
 
 #include <sys/wait.h>
 #include <unistd.h>
@@ -249,7 +250,7 @@ namespace QUASH {
 #if __APPLE__
           execvP(currentCommand[0].c_str(), PATH.c_str(), const_cast<char**>(argv_list.data()));
 #else
-          execvpe(currentCommand[0], argv_list, mEnv);
+          execvpe(currentCommand[0].c_str(), const_cast<char**>(argv_list.data()), mEnv);
 #endif
         }
         else {
