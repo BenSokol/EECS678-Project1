@@ -3,7 +3,7 @@
 * @Author:   Ben Sokol <Ben>
 * @Email:    ben@bensokol.com
 * @Created:  October 9th, 2019 [2:24pm]
-* @Modified: October 21st, 2019 [4:56am]
+* @Modified: October 21st, 2019 [4:57am]
 * @Version:  1.0.0
 *
 * Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
@@ -151,15 +151,12 @@ namespace QUASH {
     while (i < tokens.size()) {
       std::deque<std::string> currentCommand;
 
-      bool foundPipe = false;
-
       // Find end of command
       for (; i < tokens.size(); i++) {
         if (tokens[i] == "|") {
           // Advance to next command after pipe
           DBG_printv(1, "Found pipe at ", i, "\n");
           i++;
-          foundPipe = true;
           break;
         }
         currentCommand.push_back(tokens[i]);

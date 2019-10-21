@@ -3,7 +3,7 @@
 * @Author:   Ben Sokol <Ben>
 * @Email:    ben@bensokol.com
 * @Created:  October 20th, 2019 [6:09pm]
-* @Modified: October 21st, 2019 [4:51am]
+* @Modified: October 21st, 2019 [5:01am]
 * @Version:  1.0.0
 *
 * Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
@@ -32,11 +32,13 @@ TEST_CASE("QUASH::process", "[QUASH::process]") {
     QUASH::mProcesses = new std::pair<std::deque<std::shared_ptr<QUASH::process>>, std::mutex>();
   }
 
+  chdir(getenv("HOME"));
 
   SECTION("QUASH::process cd - empty") {
     std::deque<std::string> tokens = { "cd" };
     QUASH::process p(tokens, envp, QUASH::mProcesses);
     p.start();
+    REQUIRE("~/" == QUASH::COMMANDS::pwd(true));
     REQUIRE(QUASH::COMMANDS::home() == QUASH::COMMANDS::pwd(false));
   }
 
@@ -62,7 +64,7 @@ TEST_CASE("QUASH::process", "[QUASH::process]") {
   }
 
 
-  SECTION("QUASH::process cd - ~/Desktop then back HOME") {
+  SECTION("QUASH::process cd - ~/Desktop then back ~/") {
     std::deque<std::string> tokens1 = { "cd", "~/Desktop" };
     QUASH::process p1(tokens1, envp, QUASH::mProcesses);
     p1.start();
@@ -74,14 +76,5 @@ TEST_CASE("QUASH::process", "[QUASH::process]") {
     p2.start();
     REQUIRE("~/" == QUASH::COMMANDS::pwd(true));
     REQUIRE(QUASH::COMMANDS::home() == QUASH::COMMANDS::pwd(false));
-  }
-
-
-  SECTION("QUASH::process cd - remains same from previous test") {
-    std::deque<std::string> tokens2 = { "cd", "Desktop" };
-    QUASH::process p2(tokens2, envp, QUASH::mProcesses);
-    p2.start();
-    REQUIRE("~/Desktop" == QUASH::COMMANDS::pwd(true));
-    REQUIRE((std::string(QUASH::COMMANDS::home()) + "/Desktop") == QUASH::COMMANDS::pwd(false));
   }
 }
