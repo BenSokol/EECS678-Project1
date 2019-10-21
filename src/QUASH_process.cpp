@@ -3,7 +3,7 @@
 * @Author:   Ben Sokol <Ben>
 * @Email:    ben@bensokol.com
 * @Created:  October 9th, 2019 [2:24pm]
-* @Modified: October 20th, 2019 [7:29pm]
+* @Modified: October 20th, 2019 [8:08pm]
 * @Version:  1.0.0
 *
 * Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
@@ -14,12 +14,14 @@
 #include <iostream>   // std::cerr
 #include <string>     // std::string
 #include <thread>     // std::thread
+
 #include <sys/wait.h>
 #include <unistd.h>
 
 #include "QUASH_process.hpp"
 
 #include "DBG_out.hpp"
+#include "QUASH_cd.hpp"
 #include "QUASH_home.hpp"
 #include "QUASH_public.hpp"
 #include "QUASH_pwd.hpp"
@@ -168,58 +170,8 @@ namespace QUASH {
         */
       }
       else if (currentCommand[0] == "cd") {
-        if (currentCommand.size() > 2) {
-          std::cerr << "-quash: cd: too many arguments\n";
-          status = STATUS_COMMAND_RUNTIME_ERROR;
+        if (!QUASH::COMMANDS::cd(currentCommand, status, p_status)) {
           return;
-        }
-        else {
-          if (currentCommand.size() == 1) {
-            // Changing directory to home
-            const char* dir = QUASH::COMMANDS::home();
-
-            if (DBG::out::instance().enabled()) {
-              DBG_print("Changing directories to: ", dir, "\n");
-              DBG::out::instance().wait();
-            }
-
-            p_status = chdir(dir);
-          }
-          else {
-            if (currentCommand[1][0] == '/') {
-              // Changing directory to root
-              const char* dir = currentCommand[1].c_str();
-              if (DBG::out::instance().enabled()) {
-                DBG_print("Changing directories to: ", dir, "\n");
-                DBG::out::instance().wait();
-              }
-              p_status = chdir(dir);
-            }
-            else if (currentCommand[1][0] == '~') {
-              // Changing directory to home path
-              std::string str = std::string(QUASH::COMMANDS::home()) + currentCommand[1].substr(1);
-              const char* dir = str.c_str();
-              if (DBG::out::instance().enabled()) {
-                DBG_print("Changing directories to: ", dir, "\n");
-                DBG::out::instance().wait();
-              }
-              p_status = chdir(dir);
-            }
-            else {
-              std::string str = QUASH::COMMANDS::pwd(false) + "/" + currentCommand[1];
-              const char* dir = str.c_str();
-              if (DBG::out::instance().enabled()) {
-                DBG_print("Changing directories to: ", dir, "\n");
-                DBG::out::instance().wait();
-              }
-              p_status = chdir(dir);
-            }
-          }
-
-          if (p_status != 0) {
-            status = STATUS_COMMAND_RUNTIME_ERROR;
-            return;
-          }
         }
       }
       else if (currentCommand[0] == "jobs") {
@@ -251,32 +203,30 @@ namespace QUASH {
         //std::cout <<
       }
       else {
+        //pid_t pid_1 = fork();
+        //if (pid_1 == 0) {  //child
+        //gets the path
+        // char *path = getenv("PATH");
+        // char pathenv[strlen(path) + sizeof("PATH=")];
+        // char* envp[] = {pathenv, NULL};
 
-         pid_t pid_1 = fork();
-         if (pid_1 == 0) { //child
-           //gets the path
-          // char *path = getenv("PATH");
-          // char pathenv[strlen(path) + sizeof("PATH=")];
-          // char* envp[] = {pathenv, NULL};
+        //char* argv_list[] = {"ls", "/usr/bin", NULL};
 
-           char* argv_list[] = {"ls", "/usr/bin", NULL};
+        // if(currentCommand.size() == 1)
+        // {
+        //  for(int i = 1; i < currentCommand.size(); i++)
+        //  {
+        //      argv_list[i-1] = currentCommand[i];
+        //  }
+        //}
 
-          // if(currentCommand.size() == 1)
-          // {
-          //  for(int i = 1; i < currentCommand.size(); i++)
-          //  {
-          //      argv_list[i-1] = currentCommand[i];
-          //  }
-          //}
-
-           execvpe("ls", argv_list, QUASH::mEnv);
-         }
-         else { //parent
-           // wait for child
-          //waitpid(pid_1, p_status, 0);
-          wait(NULL);
-         }
-
+        //execvpe("ls", argv_list, QUASH::mEnv);
+        //}
+        //  else {  //parent
+        // wait for child
+        //waitpid(pid_1, p_status, 0);
+        //    wait(NULL);
+        //  }
       }
     }
   }
