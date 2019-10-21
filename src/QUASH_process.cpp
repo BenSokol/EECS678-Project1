@@ -3,7 +3,7 @@
 * @Author:   Ben Sokol <Ben>
 * @Email:    ben@bensokol.com
 * @Created:  October 9th, 2019 [2:24pm]
-* @Modified: October 21st, 2019 [4:29am]
+* @Modified: October 21st, 2019 [4:56am]
 * @Version:  1.0.0
 *
 * Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
@@ -48,7 +48,7 @@
   #error Requires std::filesystem or std::experimental::filesystem
 #endif
 
-static char** environ;
+char** environ;
 
 namespace QUASH {
 
