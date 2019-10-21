@@ -28,13 +28,64 @@ matrix:
       before_install:
         - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
         - sudo apt-get update -q
-        - sudo apt-get install gcc-9 g++-9 cppcheck -y
+        - sudo apt-get install gcc-9 g++-9 -y
       env:
         - MATRIX_EVAL="CC=gcc-9 && CXX=g++-9"
       script:
         - make var CC=gcc-9 CXX=g++-9
         - make CC=gcc-9 CXX=g++-9
         - make test CC=gcc-9 CXX=g++-9
+        - ./quash-test
+
+  include:
+    - name: Linux - Ubuntu - Xenial - GCC 8.3.0
+      os: linux
+      dist: xenial
+      compiler: gcc
+      before_install:
+        - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
+        - sudo apt-get update -q
+        - sudo apt-get install gcc-8 g++-8 -y
+      env:
+        - MATRIX_EVAL="CC=gcc-8 && CXX=g++-8"
+      script:
+        - make var CC=gcc-8 CXX=g++-8
+        - make CC=gcc-8 CXX=g++-8
+        - make test CC=gcc-8 CXX=g++-8
+        - ./quash-test
+
+  include:
+    - name: Linux - Ubuntu - Xenial - GCC 7.4.0
+      os: linux
+      dist: xenial
+      compiler: gcc
+      before_install:
+        - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
+        - sudo apt-get update -q
+        - sudo apt-get install gcc-7 g++-7 -y
+      env:
+        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
+      script:
+        - make var CC=gcc-7 CXX=g++-7
+        - make CC=gcc-7 CXX=g++-7
+        - make test CC=gcc-7 CXX=g++-7
+        - ./quash-test
+
+  include:
+    - name: Linux - Ubuntu - Xenial - Clang 7
+      os: linux
+      dist: xenial
+      compiler: clang
+      before_install:
+        - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
+        - sudo apt-get update -q
+        - sudo apt-get install clang-7 clang-7 -y
+      env:
+        - MATRIX_EVAL="CC=clang-7 && CXX=clang++-7"
+      script:
+        - make var CC=clang-7 CXX=clang++-7
+        - make CC=clang-7 CXX=clang++-7
+        - make test CC=clang-7 CXX=clang++-7
         - ./quash-test
 
     - name: Linux - Ubuntu - Bionic - GCC 9.2.0 - cppcheck
