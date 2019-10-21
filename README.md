@@ -43,7 +43,6 @@ For compilation help, see [this](https://github.com/BenSokol/build-tools) page.
 | --debug               | -d         | Enable debug mode - Additional output to std::cerr and logs/Log \time since epocH\>.log                                                  |
 | --debug-file          | -df        | Enable debug mode - Additional output to logs/Log \time since epocH\>.log                                                                |
 | --debug-stderr        | -de        | Enable debug mode - Additional output to std::cerr                                                                                       |
-| --print-env           |            | Prints environment after initializing shell (before giving first prompt)                                                                 |
 
 #### Debug
 Debug mode has 2 levels of verbosity.

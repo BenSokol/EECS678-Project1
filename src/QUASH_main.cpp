@@ -3,7 +3,7 @@
 * @Author:   Ben Sokol <Ben>
 * @Email:    ben@bensokol.com
 * @Created:  September 23rd, 2019 [8:00pm]
-* @Modified: October 21st, 2019 [1:47am]
+* @Modified: October 21st, 2019 [4:40am]
 * @Version:  1.0.0
 *
 * Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
@@ -32,6 +32,7 @@
 #include "QUASH_public.hpp"     // QUASH::STATUS_CODES
 #include "QUASH_pwd.hpp"        // QUASH::COMMANDS::pwd()
 #include "QUASH_tokenizer.hpp"  // QUASH::Tokenizer()
+#include "QUASH_usage.hpp"      // QUASH::COMMANDS::usage()
 #include "QUASH_whoami.hpp"     // QUASH::COMMANDS::whoami()
 #include "UTL_assert.h"         // UTL_assert(), UTL_assert_always()
 #include "UTL_colors.hpp"       // UTL::COLORS::FG::red, etc.
@@ -41,7 +42,7 @@ namespace QUASH {
 
   std::pair<std::deque<std::shared_ptr<process>>, std::mutex> *mProcesses;
 
-  main::main() : mPrintEnv(false), mDisplayUsage(false), mStatus(STATUS_SUCCESS) {
+  main::main() : mDisplayUsage(false), mStatus(STATUS_SUCCESS) {
     if (QUASH::mProcesses == nullptr) {
       mProcesses = new std::pair<std::deque<std::shared_ptr<process>>, std::mutex>();
     }
@@ -84,7 +85,7 @@ namespace QUASH {
 
   quash_status_t main::run() {
     if (mDisplayUsage || mStatus != STATUS_SUCCESS) {
-      usage();
+      std::cout << QUASH::COMMANDS::usage();
       return mStatus;
     }
 
@@ -381,11 +382,6 @@ namespace QUASH {
               debug_os = true;
               verbosity += 1;
               break;
-
-            case QUASH_FLAG_PRINT_ENV:
-              // Print Env (--print-env)
-              mPrintEnv = true;
-              break;
           }
         }
         else {
@@ -420,8 +416,6 @@ namespace QUASH {
 
     mCmdFlags["-de"] = QUASH_FLAG_DEBUG_STDERR;
     mCmdFlags["--debug-stderr"] = QUASH_FLAG_DEBUG_STDERR;
-
-    mCmdFlags["--print-env"] = QUASH_FLAG_PRINT_ENV;
   }
 
 
@@ -429,8 +423,4 @@ namespace QUASH {
     mEnv = envp;
   }
 
-
-  void main::usage() const {
-    std::cout << "Usage: ./quash\n";
-  }
 }  // namespace QUASH

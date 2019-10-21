@@ -3,7 +3,7 @@
 * @Author:   Ben Sokol <Ben>
 * @Email:    ben@bensokol.com
 * @Created:  September 23rd, 2019 [7:59pm]
-* @Modified: October 20th, 2019 [11:36pm]
+* @Modified: October 21st, 2019 [4:38am]
 * @Version:  1.0.0
 *
 * Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
@@ -45,20 +45,15 @@ namespace QUASH {
     void initCmdFlags();
     void initEnv(char **envp);
 
-    void printEnv() const;
-    void usage() const;
-
     typedef enum QUASH_CMD_FLAGS : uint8_t {
       QUASH_FLAG_HELP,
       QUASH_FLAG_DEBUG,
       QUASH_FLAG_DEBUG_STDERR,
       QUASH_FLAG_DEBUG_FILE,
-      QUASH_FLAG_PRINT_ENV
     } QUASH_CMD_FLAG;
 
     jmp_buf mJumpBufferSIGINT;
 
-    bool mPrintEnv;          // Display environment?
     bool mDisplayUsage;      // Display help and exit?
     quash_status_t mStatus;  // Status
 

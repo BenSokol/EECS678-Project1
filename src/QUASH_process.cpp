@@ -3,37 +3,36 @@
 * @Author:   Ben Sokol <Ben>
 * @Email:    ben@bensokol.com
 * @Created:  October 9th, 2019 [2:24pm]
-* @Modified: October 21st, 2019 [1:34am]
+* @Modified: October 21st, 2019 [4:29am]
 * @Version:  1.0.0
 *
 * Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
 */
 
-// clang-format off
-#include <sys/cdefs.h>
-// clang-format on
-
 #include <csignal>  // kill
+#include <cstring>
 
 #include <algorithm>  // std::min
 #include <deque>      // std::deque
 #include <iostream>   // std::cerr
 #include <string>     // std::string
 #include <thread>     // std::thread
-#include <cstring>
 
+#include <sys/cdefs.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
-#include "UTL_inputValidation.hpp"
+#include "QUASH_process.hpp"
+
 #include "DBG_out.hpp"
 #include "QUASH_cd.hpp"
 #include "QUASH_home.hpp"
-#include "QUASH_process.hpp"
 #include "QUASH_public.hpp"
 #include "QUASH_pwd.hpp"
 #include "QUASH_tokenizer.hpp"
+#include "QUASH_usage.hpp"
 #include "UTL_assert.h"
+#include "UTL_inputValidation.hpp"
 
 #if __has_include(<filesystem>)
   #include <filesystem>
@@ -48,6 +47,8 @@
 #else
   #error Requires std::filesystem or std::experimental::filesystem
 #endif
+
+static char** environ;
 
 namespace QUASH {
 
@@ -214,12 +215,14 @@ namespace QUASH {
         else {
           DBG_print("Warning: kill failed...\n");
         }
+        continue;
       }
       else if (currentCommand[0] == "cd") {
         if (!QUASH::COMMANDS::cd(currentCommand, status, p_status)) {
           done = true;
           return;
         }
+        continue;
       }
       else if (currentCommand[0] == "jobs") {
         status = STATUS_COMMAND_PRINT_JOBS;
@@ -227,14 +230,48 @@ namespace QUASH {
         return;
       }
       else if (currentCommand[0] == "set") {
-        if (currentCommand.size() != 3) {
-          std::cerr << "-quash: set: expected 2 arguments [NAME] [VALUE]\n";
+        if (currentCommand.size() < 2 || currentCommand.size() > 3) {
+          std::cerr << "-quash: set: expected 1 or 2 arguments [NAME] [VALUE], or [NAME]=[VALUE]\n";
           status = STATUS_COMMAND_RUNTIME_ERROR;
           done = true;
           return;
         }
         else {
-          p_status = setenv(currentCommand[1].c_str(), currentCommand[2].c_str(), 1);
+          std::string name = "";
+          std::string value = "";
+          if (currentCommand.size() == 2) {
+            size_t sep = currentCommand[1].find_first_of("=");
+            if (sep == std::string::npos) {
+              name = currentCommand[1];
+            }
+            else {
+              name = currentCommand[1].substr(0, sep);
+              value = currentCommand[1].substr(sep + 1);
+            }
+          }
+          else if (currentCommand.size() == 3) {
+            name = currentCommand[1];
+            value = currentCommand[2];
+          }
+          else {
+            UTL_assert_always();
+          }
+
+          p_status = setenv(name.c_str(), value.c_str(), 1);
+
+          for (char** env = mEnv; *env != nullptr; env++) {
+            std::string row = *env;
+            size_t sep = row.find_first_of("=");
+            if ((sep == std::string::npos && row.substr(0, row.size() - 1).compare(name) == 0)
+                || (row.substr(0, sep).compare(name) == 0)) {
+              *env = new char[name.size() + value.size() + 3];
+              std::strcpy((*env), name.c_str());
+              char equal[] = "=";
+              std::strcat((*env), equal);
+              std::strcat((*env), value.c_str());
+              break;
+            }
+          }
 
           if (p_status != 0) {
             status = STATUS_COMMAND_RUNTIME_ERROR;
@@ -242,10 +279,11 @@ namespace QUASH {
             return;
           }
         }
+        continue;
       }
       else if (currentCommand[0] == "help") {
-        //status = STATUS_COMMAND_HELP;
-        //std::cout <<
+        std::cout << QUASH::COMMANDS::usage();
+        continue;
       }
       else {
         if (mEnv == nullptr) {
@@ -276,6 +314,7 @@ namespace QUASH {
           }
         }
 
+        // Check if executable is in PATH
         bool found = false;
         std::stringstream ss;
         ss << PATH;
@@ -288,13 +327,25 @@ namespace QUASH {
           }
         }
 
-        std_filesystem::path fs_path = std_filesystem::current_path();
-        fs_path += "/";
-        fs_path += currentCommand[0];
-        if (std_filesystem::exists(fs_path)) {
-          found = true;
+        // Check if executable is absolute
+        if (!found) {
+          std_filesystem::path fs_abs_path = currentCommand[0];
+          if (std_filesystem::exists(fs_abs_path)) {
+            found = true;
+          }
         }
 
+        // Check if executable is relative
+        if (!found) {
+          std_filesystem::path fs_rel_path = std_filesystem::current_path();
+          fs_rel_path += "/";
+          fs_rel_path += currentCommand[0];
+          if (std_filesystem::exists(fs_rel_path)) {
+            found = true;
+          }
+        }
+
+        // Return if not found
         if (!found) {
           status = STATUS_COMMAND_NOT_FOUND;
           errorMessage = "Command \'" + currentCommand[0] + "\' not found.";
@@ -305,6 +356,7 @@ namespace QUASH {
         pids.push_back(fork());
         if (pids.back() == 0) {
           // child
+
           std::vector<char*> argv_list;
           std::transform(
             currentCommand.begin(), currentCommand.end(), std::back_inserter(argv_list), [](const std::string& s) {
@@ -344,6 +396,10 @@ namespace QUASH {
           }
 
 #if __APPLE__
+          // macOS does NOT have the same function calls as linux apparently.
+          // The following line makes the environment available to exec
+          // (environ is an extern variable defined in unistd.h on macOS)
+          environ = mEnv;
           execvP(currentCommand[0].c_str(), PATH.c_str(), const_cast<char**>(argv_list.data()));
 #else
           execvpe(currentCommand[0].c_str(), const_cast<char**>(argv_list.data()), mEnv);
@@ -352,7 +408,13 @@ namespace QUASH {
       }
     }
 
-    // Parent
+    // Parent only, child cant get here.
+    for (size_t j = 0; j < pids.size(); ++j) {
+      if (pids[j] == 0) {
+        return;
+      }
+    }
+
     mProcessStartedCondition.notify_one();
 
     if (pids.size() > 0) {
@@ -376,20 +438,6 @@ namespace QUASH {
 
     done = true;
   }  // namespace QUASH
-
-  // void pipeInputs(const std::deque<std::string> newTokens, process* pipedProcess) {
-  //   pipedProcess->start();
-  //   pid_t pid_1;
-  //   int dataPipe[2];
-  //   pipe(dataPipe);
-  //   pid_1 = fork();
-  //   if (pid_1 == 0) {
-  //     close(dataPipe[0]);
-  //     dup2(dataPipe[1], output?);
-  //
-  //     execv(newTokens[1], arguments);
-  //   }
-  // }
 
 
   void process::start() {
