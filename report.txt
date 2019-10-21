@@ -15,6 +15,8 @@ We first tokenize the input for keywords, and pipes, and use the tokens to recei
     tokens and executed along with the executable within the execvpe call.
 
 (3) set for HOME and PATH work properly
+    Both set for HOME and PATH work properly. Setting home sets the variable "HOME", and now whenever HOME is called, it will use the new location. This is done in QUASH_process.
+    It uses the setenv() function to change the variables.
 
 (4) exit and quit work properly
     Running "exit" or "quit" will exit QUASH as expected. This is done similar to running executables without arguments, however instead of executing anything, a
