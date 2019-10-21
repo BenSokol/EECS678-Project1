@@ -2,7 +2,7 @@
 # @Author:   Ben Sokol <Ben>
 # @Email:    ben@bensokol.com
 # @Created:  February 14th, 2019 [5:21pm]
-# @Modified: October 20th, 2019 [7:31pm]
+# @Modified: October 21st, 2019 [1:07pm]
 # @Version:  1.0.0
 #
 # Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
@@ -25,7 +25,7 @@ CXX=g++-9
 endif
 
 CCSTD = -std=c11
-CXXSTD = -std=c++2a
+CXXSTD = -std=c++17
 INC = -Iexternal/Catch2/single_include/catch2
 WARNING_FLAGS += -Wall -Wextra -Wpedantic
 WARNING_FLAGS_GCC += -Wno-clobbered
