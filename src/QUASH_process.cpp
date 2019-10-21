@@ -14,7 +14,7 @@
 #include <iostream>   // std::cerr
 #include <string>     // std::string
 #include <thread>     // std::thread
-
+#include <sys/wait.h>
 #include <unistd.h>
 
 #include "QUASH_process.hpp"
@@ -251,30 +251,32 @@ namespace QUASH {
         //std::cout <<
       }
       else {
-        /*
+
          pid_t pid_1 = fork();
          if (pid_1 == 0) { //child
            //gets the path
-           char *path = getenv("PATH");
-           char pathenv[strlen(path) + sizeof("PATH=")];
-           char* envp[] = {pathenv, NULL};
+          // char *path = getenv("PATH");
+          // char pathenv[strlen(path) + sizeof("PATH=")];
+          // char* envp[] = {pathenv, NULL};
 
-           char* argv_list[currentCommand.size()-1];
-           if(currentCommand.size() == 1)
-           {
-            for(int i = 1; i < currentCommand.size(); i++)
-            {
-                argv_list[i-1] = currentCommand[i];
-            }
-           }
+           char* argv_list[] = {"ls", "/usr/bin", NULL};
 
-           execvpe(currentCommand[0], argv_list, envp);
+          // if(currentCommand.size() == 1)
+          // {
+          //  for(int i = 1; i < currentCommand.size(); i++)
+          //  {
+          //      argv_list[i-1] = currentCommand[i];
+          //  }
+          //}
+
+           execvpe("ls", argv_list, QUASH::mEnv);
          }
          else { //parent
            // wait for child
+          //waitpid(pid_1, p_status, 0);
           wait(NULL);
          }
-         */
+
       }
     }
   }
