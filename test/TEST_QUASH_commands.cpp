@@ -3,7 +3,7 @@
 * @Author:   Ben Sokol <Ben>
 * @Email:    ben@bensokol.com
 * @Created:  October 20th, 2019 [4:04am]
-* @Modified: October 20th, 2019 [5:57am]
+* @Modified: October 20th, 2019 [6:55pm]
 * @Version:  1.0.0
 *
 * Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
@@ -54,7 +54,7 @@ TEST_CASE("QUASH::COMMANDS::home returns correct string", "[QUASH::COMMANDS]") {
 
 TEST_CASE("QUASH::COMMANDS::hostname MANUAL CHECK", "[QUASH::COMMANDS][!mayfail]") {
   std::string ret = QUASH::COMMANDS::hostname();
-  REQUIRE("IS THIS CORRECT?" == ret);
+  WARN("IS THIS CORRECT? " + ret);
 }
 
 TEST_CASE("QUASH::COMMANDS::ps1 MANUAL CHECK", "[QUASH::COMMANDS]") {

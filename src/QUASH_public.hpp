@@ -3,7 +3,7 @@
 * @Author:   Ben Sokol <Ben>
 * @Email:    ben@bensokol.com
 * @Created:  September 23rd, 2019 [7:20pm]
-* @Modified: October 20th, 2019 [5:56pm]
+* @Modified: October 20th, 2019 [6:13pm]
 * @Version:  1.0.0
 *
 * Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
@@ -29,6 +29,7 @@ namespace QUASH {
     STATUS_TOKENIZER_ERROR_NAME,  // Not Used
 
     STATUS_COMMAND_NOT_FOUND,  // Not Used
+    STATUS_COMMAND_NO_ARGS,
     STATUS_COMMAND_SYNTAX_ERROR,
     STATUS_COMMAND_SEMANTIC_ERROR,
     STATUS_COMMAND_RUNTIME_ERROR,

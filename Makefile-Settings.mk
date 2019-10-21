@@ -2,7 +2,7 @@
 # @Author:   Ben Sokol <Ben>
 # @Email:    ben@bensokol.com
 # @Created:  February 14th, 2019 [5:21pm]
-# @Modified: October 20th, 2019 [6:36am]
+# @Modified: October 20th, 2019 [7:31pm]
 # @Version:  1.0.0
 #
 # Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
@@ -19,6 +19,11 @@ CFLAGS += -I/home/b843s521/gcc-9.2.0/include -L/home/b843s521/gcc-9.2.0/lib -sta
 CXXFLAGS += -I/home/b843s521/gcc-9.2.0/include -L/home/b843s521/gcc-9.2.0/lib -static-libstdc++
 endif
 
+ifeq ($(shell hostname | head -c6),shogun)
+CC=gcc-9
+CXX=g++-9
+endif
+
 CCSTD = -std=c11
 CXXSTD = -std=c++2a
 INC = -Iexternal/Catch2/single_include/catch2
@@ -27,7 +32,7 @@ WARNING_FLAGS_GCC += -Wno-clobbered
 WARNING_FLAGS_CLANG += -Weverything -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-padded -Wno-date-time -Wno-exit-time-destructors -Wno-global-constructors -Wno-disabled-macro-expansion -Wno-switch-enum -Wno-unreachable-code-break -Wno-unreachable-code-return -Wno-missing-declarations
 
 MACOS_FLAGS +=
-LINUX_FLAGS += -pthread
+LINUX_FLAGS += -pthread -lstdc++fs
 
 CPPCHECK_SUPPRESS = --suppress=missingIncludeSystem --suppress=preprocessorErrorDirective:submodules/utilities/UTL_textWrap.cpp:18 --suppress=preprocessorErrorDirective:submodules/debug/DBG_out.hpp:36
 CPPCHECK_FLAGS = -q --platform=native --error-exitcode=1 --force

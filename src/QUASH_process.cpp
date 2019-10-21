@@ -3,7 +3,7 @@
 * @Author:   Ben Sokol <Ben>
 * @Email:    ben@bensokol.com
 * @Created:  October 9th, 2019 [2:24pm]
-* @Modified: October 20th, 2019 [6:07pm]
+* @Modified: October 20th, 2019 [7:29pm]
 * @Version:  1.0.0
 *
 * Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
@@ -30,7 +30,11 @@ namespace QUASH {
 
   process::process(const std::deque<std::string> _tokens) :
       status(STATUS_SUCCESS), p_status(0), errorMessage(""), async(true), done(false), pid(0), tokens(_tokens) {
-    UTL_assert(tokens.size() > 0);
+    if (tokens.size() == 0) {
+      status = STATUS_COMMAND_NO_ARGS;
+      UTL_assert_always();
+      return;
+    }
 
     for (size_t i = 0; i < tokens.size(); i++) {
       if (tokens[i] == "&") {
