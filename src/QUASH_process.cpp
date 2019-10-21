@@ -247,14 +247,30 @@ namespace QUASH {
         //std::cout <<
       }
       else {
-        // if (0 == fork()) {
-        //   // Child
-        //   // call exec if not custom command
-        // }
-        // else {
-        //   // Parent
-        //   // wait for child
-        // }
+        /*
+         pid_t pid_1 = fork();
+         if (pid_1 == 0) { //child
+           //gets the path
+           char *path = getenv("PATH");
+           char pathenv[strlen(path) + sizeof("PATH=")];
+           char* envp[] = {pathenv, NULL};
+
+           char* argv_list[currentCommand.size()-1];
+           if(currentCommand.size() == 1)
+           {
+            for(int i = 1; i < currentCommand.size(); i++)
+            {
+                argv_list[i-1] = currentCommand[i];
+            }
+           }
+
+           execvpe(currentCommand[0], argv_list, envp);
+         }
+         else { //parent
+           // wait for child
+          wait(NULL);
+         }
+         */
       }
     }
   }
