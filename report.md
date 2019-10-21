@@ -1,5 +1,5 @@
 # EECS678-Project1 - Report
-[back](https://github.com/BenSokol/EECS678-Project1/blob/master/FEATURES.md) to README<br>
+[back](https://github.com/BenSokol/EECS678-Project1)<br>
 
 ## Description
 The quash shell we built attempts to mimic bash while still fulfilling the required features as listed in the project page. We first tokenize the input for keywords, and pipes, and use the tokens to receive the command and its args to execute.
@@ -63,19 +63,22 @@ The quash shell we built attempts to mimic bash while still fulfilling the requi
 
 ## Testing
 For testing, we used 2 different methods.
-1. We used a test suite ([Catch2](https://github.com/catchorg/Catch2)).
-  * This can be run by using the following commands:
+1. We used a test suite ([Catch2](https://github.com/catchorg/Catch2)) to implement unit testing.
+    * This can be run by using the following commands:
 
-    ```bash
-    # Compile tests
-    make test
+      ```bash
+      # Compile tests
+      make test
 
-    # Run
-    ./quash-test
+      # Run
+      ./quash-test
 
-    # Alternatively, this will compile tests, run them, and run cppcheck (a static analyzer).
-    make run-tests
-    ```
+      # Alternatively, this will compile tests, run them, and run cppcheck (a static analyzer).
+      make run-tests
+      ```
 
-  * This fully tests the tokenizer, cd, set (for HOME, not PATH), home, pwd, ps1, and whoami
+    * This fully tests the tokenizer, cd, set (for HOME, not PATH), home, pwd, ps1, and whoami
 2. Manual testing. This was done to test all internal functions, and a variety of external arguments such as "ls /usr/bin | less", which opens less with the output of /usr/bin correctly.
+
+
+[back](https://github.com/BenSokol/EECS678-Project1)
