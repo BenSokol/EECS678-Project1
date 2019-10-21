@@ -3,7 +3,7 @@
 * @Author:   Ben Sokol <Ben>
 * @Email:    ben@bensokol.com
 * @Created:  September 23rd, 2019 [7:20pm]
-* @Modified: October 20th, 2019 [7:47pm]
+* @Modified: October 20th, 2019 [8:46pm]
 * @Version:  1.0.0
 *
 * Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
@@ -39,9 +39,6 @@ namespace QUASH {
 
     STATUS_UNKNOWN = std::numeric_limits<uint8_t>::max(),
   } STATUS_CODE;
-
-
-  [[maybe_unused]] static char **mEnv = nullptr;
 
 }  // namespace QUASH
 

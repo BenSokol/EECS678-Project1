@@ -3,11 +3,15 @@
 * @Author:   Ben Sokol <Ben>
 * @Email:    ben@bensokol.com
 * @Created:  October 9th, 2019 [2:24pm]
-* @Modified: October 20th, 2019 [8:08pm]
+* @Modified: October 20th, 2019 [9:42pm]
 * @Version:  1.0.0
 *
 * Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
 */
+
+// clang-format off
+#include <sys/cdefs.h>
+// clang-format on
 
 #include <algorithm>  // std::min
 #include <deque>      // std::deque
@@ -18,11 +22,10 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-#include "QUASH_process.hpp"
-
 #include "DBG_out.hpp"
 #include "QUASH_cd.hpp"
 #include "QUASH_home.hpp"
+#include "QUASH_process.hpp"
 #include "QUASH_public.hpp"
 #include "QUASH_pwd.hpp"
 #include "QUASH_tokenizer.hpp"
@@ -30,8 +33,15 @@
 
 namespace QUASH {
 
-  process::process(const std::deque<std::string> _tokens) :
-      status(STATUS_SUCCESS), p_status(0), errorMessage(""), async(true), done(false), pid(0), tokens(_tokens) {
+  process::process(std::deque<std::string> _tokens, char** envp) :
+      status(STATUS_SUCCESS),
+      p_status(0),
+      errorMessage(""),
+      async(true),
+      done(false),
+      pid(0),
+      tokens(_tokens),
+      mEnv(envp) {
     if (tokens.size() == 0) {
       status = STATUS_COMMAND_NO_ARGS;
       UTL_assert_always();
@@ -42,6 +52,7 @@ namespace QUASH {
       if (tokens[i] == "&") {
         if (i == tokens.size() - 1) {
           async = false;
+          tokens.pop_back();
         }
         else {
           status = STATUS_COMMAND_SYNTAX_ERROR;
@@ -203,33 +214,60 @@ namespace QUASH {
         //std::cout <<
       }
       else {
-        //pid_t pid_1 = fork();
-        //if (pid_1 == 0) {  //child
-        //gets the path
-        // char *path = getenv("PATH");
-        // char pathenv[strlen(path) + sizeof("PATH=")];
-        // char* envp[] = {pathenv, NULL};
+        if (mEnv == nullptr) {
+          UTL_assert_always();
+        }
+#if __APPLE__
+        std::string PATH = "";
 
-        //char* argv_list[] = {"ls", "/usr/bin", NULL};
+        for (char** env = const_cast<char**>(mEnv); *env != nullptr; env++) {
+          std::string row = *env;
+          size_t sep = row.find_first_of("=");
+          if (sep == std::string::npos && row.substr(0, row.size() - 1).compare("PATH") == 0) {
+            PATH = getenv("PATH");
+          }
+          else if (row.substr(0, sep).compare("PATH") == 0) {
+            PATH = row.substr(sep + 1);
+          }
+        }
 
-        // if(currentCommand.size() == 1)
-        // {
-        //  for(int i = 1; i < currentCommand.size(); i++)
-        //  {
-        //      argv_list[i-1] = currentCommand[i];
-        //  }
-        //}
+        // for (size_t j = 0; i < )
+#endif
+        pid_t pid_1 = fork();
+        if (pid_1 == 0) {
+          // child
+          std::vector<char*> argv_list;
+          std::transform(
+            currentCommand.begin(), currentCommand.end(), std::back_inserter(argv_list), [](const std::string& s) {
+              char* pc = new char[s.size() + 1];
+              std::strcpy(pc, s.c_str());
+              return pc;
+            });
 
-        //execvpe("ls", argv_list, QUASH::mEnv);
-        //}
-        //  else {  //parent
-        // wait for child
-        //waitpid(pid_1, p_status, 0);
-        //    wait(NULL);
-        //  }
+          argv_list.push_back(nullptr);
+
+#if __APPLE__
+          execvP(currentCommand[0].c_str(), PATH.c_str(), const_cast<char**>(argv_list.data()));
+#else
+          execvpe(currentCommand[0], argv_list, mEnv);
+#endif
+        }
+        else {
+          // Parent
+          // wait for child
+          int wait_status;
+          waitpid(pid_1, &wait_status, 0);
+
+          p_status = wait_status;
+
+          if (p_status != 0) {
+            status = STATUS_COMMAND_RUNTIME_ERROR;
+            return;
+          }
+        }
       }
     }
-  }
+  }  // namespace QUASH
 
   // void pipeInputs(const std::deque<std::string> newTokens, process* pipedProcess) {
   //   pipedProcess->start();

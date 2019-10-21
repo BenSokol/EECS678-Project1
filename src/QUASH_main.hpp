@@ -3,7 +3,7 @@
 * @Author:   Ben Sokol <Ben>
 * @Email:    ben@bensokol.com
 * @Created:  September 23rd, 2019 [7:59pm]
-* @Modified: October 20th, 2019 [7:48pm]
+* @Modified: October 20th, 2019 [8:47pm]
 * @Version:  1.0.0
 *
 * Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
@@ -62,6 +62,7 @@ namespace QUASH {
     quash_status_t mStatus;  // Status
 
     std::map<std::string, QUASH_CMD_FLAG> mCmdFlags;  // Const map of Command Line Flags to QUASH_CLI_FLAGS enum
+    char **mEnv;
   };
 }  // namespace QUASH
 

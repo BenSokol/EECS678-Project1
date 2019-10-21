@@ -3,7 +3,7 @@
 * @Author:   Ben Sokol <Ben>
 * @Email:    ben@bensokol.com
 * @Created:  September 23rd, 2019 [8:00pm]
-* @Modified: October 20th, 2019 [7:48pm]
+* @Modified: October 20th, 2019 [8:47pm]
 * @Version:  1.0.0
 *
 * Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
@@ -183,7 +183,7 @@ namespace QUASH {
 
 
       // Create new process
-      process *p = new process(retTokenizer.second);
+      process *p = new process(retTokenizer.second, mEnv);
 
       switch (p->status) {
         case STATUS_SUCCESS:
@@ -407,7 +407,7 @@ namespace QUASH {
 
 
   void main::initEnv(char **envp) {
-    QUASH::mEnv = envp;
+    mEnv = envp;
   }
 
 

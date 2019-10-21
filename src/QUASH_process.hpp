@@ -3,7 +3,7 @@
 * @Author:   Ben Sokol <Ben>
 * @Email:    ben@bensokol.com
 * @Created:  October 9th, 2019 [2:29pm]
-* @Modified: October 20th, 2019 [4:15pm]
+* @Modified: October 20th, 2019 [9:29pm]
 * @Version:  1.0.0
 *
 * Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
@@ -27,7 +27,7 @@ namespace QUASH {
   class process {
   public:
     // Defined in QUASH_process.cpp
-    explicit process(const std::deque<std::string> _tokens);
+    explicit process(std::deque<std::string> _tokens, char **envp);
     ~process();
     void command();
     void start();
@@ -54,7 +54,8 @@ namespace QUASH {
     std::thread::id tid;  // id of thread
     pid_t pid;            // id of process
 
-    const std::deque<std::string> tokens;  // arguments for process
+    std::deque<std::string> tokens;  // arguments for process
+    char **mEnv;
   };
 
 }  // namespace QUASH
