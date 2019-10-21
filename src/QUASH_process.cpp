@@ -3,7 +3,7 @@
 * @Author:   Ben Sokol <Ben>
 * @Email:    ben@bensokol.com
 * @Created:  October 9th, 2019 [2:24pm]
-* @Modified: October 21st, 2019 [4:57am]
+* @Modified: October 21st, 2019 [12:29pm]
 * @Version:  1.0.0
 *
 * Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
@@ -175,36 +175,36 @@ namespace QUASH {
       }
       else if (currentCommand[0] == "kill") {
         if (currentCommand.size() != 3) {
-          std::cerr << "-quash: kill: expected 2 arguments [JOBID] [SIGNUM]\n";
+          std::cerr << "-quash: kill: expected 2 arguments [SIGNUM] [JOBID]\n";
           status = STATUS_COMMAND_RUNTIME_ERROR;
           done = true;
           return;
         }
-        if (!UTL::isNumber(currentCommand[1])
-            || !UTL::isNumber(currentCommand[2], std::numeric_limits<int>::min(), std::numeric_limits<int>::max())) {
-          std::cerr << "-quash: kill: expected 2 arguments [JOBID] [SIGNUM]\nusage: kill [JOBID] [SIGNUM]\n";
+        if (!UTL::isNumber(currentCommand[2])
+            || !UTL::isNumber(currentCommand[1], std::numeric_limits<int>::min(), std::numeric_limits<int>::max())) {
+          std::cerr << "-quash: kill: expected 2 arguments [SIGNUM] [JOBID]\nusage: kill [SIGNUM] [JOBID]\n";
           status = STATUS_COMMAND_RUNTIME_ERROR;
           done = true;
           return;
         }
-        int kill_jobid = std::stoi(currentCommand[1]);
-        int kill_signum = std::stoi(currentCommand[2]);
+        int kill_jobid = std::stoi(currentCommand[2]);
+        int kill_signum = std::stoi(currentCommand[1]);
         std::unique_lock<std::mutex> lock(mProcesses->second);
         if (mProcesses->first.empty()) {
-          std::cerr << "-quash: kill: No processes are running.\nusage: kill [JOBID] [SIGNUM]\n";
+          std::cerr << "-quash: kill: No processes are running.\nusage: kill [SIGNUM] [JOBID]\n";
           status = STATUS_COMMAND_RUNTIME_ERROR;
           done = true;
           return;
         }
         if (mProcesses->first.size() < static_cast<size_t>(kill_jobid)
             || mProcesses->first[static_cast<size_t>(kill_jobid) - 1] == nullptr) {
-          std::cerr << "-quash: kill: JOBID out of range\nusage: kill [JOBID] [SIGNUM]\n";
+          std::cerr << "-quash: kill: JOBID out of range\nusage: kill [SIGNUM] [JOBID]\n";
           status = STATUS_COMMAND_RUNTIME_ERROR;
           done = true;
           return;
         }
 
-        std::cout << "Sending signal " << currentCommand[2] << " to job " << currentCommand[1];
+        std::cout << "Sending signal " << currentCommand[1] << " to job " << currentCommand[2];
         std::cout << "\t" << QUASH::Tokenizer::str(mProcesses->first.back()->tokens, true) << "\n";
         if (kill(mProcesses->first[static_cast<size_t>(kill_jobid) - 1]->pid, kill_signum) == 0) {
           mProcesses->first.erase(mProcesses->first.begin() + static_cast<long>(kill_jobid) - 1);
