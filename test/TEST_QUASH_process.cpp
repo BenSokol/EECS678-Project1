@@ -3,7 +3,7 @@
 * @Author:   Ben Sokol <Ben>
 * @Email:    ben@bensokol.com
 * @Created:  October 20th, 2019 [6:09pm]
-* @Modified: October 21st, 2019 [5:01am]
+* @Modified: October 21st, 2019 [5:10am]
 * @Version:  1.0.0
 *
 * Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
@@ -27,54 +27,50 @@
 
 static char *envp[] = { const_cast<char *>("PATH:/bin"), const_cast<char *>("HOME:/bin") };
 
-TEST_CASE("QUASH::process", "[QUASH::process]") {
+TEST_CASE("QUASH::process::cd", "[QUASH::process]") {
   if (QUASH::mProcesses == nullptr) {
     QUASH::mProcesses = new std::pair<std::deque<std::shared_ptr<QUASH::process>>, std::mutex>();
   }
 
-  chdir(getenv("HOME"));
+  [[maybe_unused]] int x = chdir(getenv("HOME"));
 
-  SECTION("QUASH::process cd - empty") {
-    std::deque<std::string> tokens = { "cd" };
-    QUASH::process p(tokens, envp, QUASH::mProcesses);
-    p.start();
-    REQUIRE("~/" == QUASH::COMMANDS::pwd(true));
-    REQUIRE(QUASH::COMMANDS::home() == QUASH::COMMANDS::pwd(false));
-  }
-
-
-  SECTION("QUASH::process cd - /usr/bin") {
-    std::deque<std::string> tokens = { "cd", "/usr/bin" };
-    QUASH::process p(tokens, envp, QUASH::mProcesses);
-    p.start();
-    REQUIRE("/usr/bin" == QUASH::COMMANDS::pwd(false));
-  }
+  INFO("QUASH::process cd - empty");
+  std::deque<std::string> tokens1 = { "cd" };
+  QUASH::process p1(tokens1, envp, QUASH::mProcesses);
+  p1.start();
+  REQUIRE("~/" == QUASH::COMMANDS::pwd(true));
+  REQUIRE(QUASH::COMMANDS::home() == QUASH::COMMANDS::pwd(false));
 
 
-  SECTION("QUASH::process cd - /usr, then bin") {
-    std::deque<std::string> tokens1 = { "cd", "/usr" };
-    QUASH::process p1(tokens1, envp, QUASH::mProcesses);
-    p1.start();
-    REQUIRE("/usr" == QUASH::COMMANDS::pwd(false));
-
-    std::deque<std::string> tokens2 = { "cd", "bin" };
-    QUASH::process p2(tokens2, envp, QUASH::mProcesses);
-    p2.start();
-    REQUIRE("/usr/bin" == QUASH::COMMANDS::pwd(false));
-  }
+  INFO("QUASH::process cd - /usr/bin");
+  std::deque<std::string> tokens2 = { "cd", "/usr/bin" };
+  QUASH::process p2(tokens2, envp, QUASH::mProcesses);
+  p2.start();
+  REQUIRE("/usr/bin" == QUASH::COMMANDS::pwd(false));
 
 
-  SECTION("QUASH::process cd - ~/Desktop then back ~/") {
-    std::deque<std::string> tokens1 = { "cd", "~/Desktop" };
-    QUASH::process p1(tokens1, envp, QUASH::mProcesses);
-    p1.start();
-    REQUIRE("~/Desktop" == QUASH::COMMANDS::pwd(true));
-    REQUIRE((std::string(QUASH::COMMANDS::home()) + "/Desktop") == QUASH::COMMANDS::pwd(false));
+  INFO("QUASH::process cd - /usr, then bin");
+  std::deque<std::string> tokens3 = { "cd", "/usr" };
+  QUASH::process p3(tokens3, envp, QUASH::mProcesses);
+  p3.start();
+  REQUIRE("/usr" == QUASH::COMMANDS::pwd(false));
 
-    std::deque<std::string> tokens2 = { "cd", "~/" };
-    QUASH::process p2(tokens2, envp, QUASH::mProcesses);
-    p2.start();
-    REQUIRE("~/" == QUASH::COMMANDS::pwd(true));
-    REQUIRE(QUASH::COMMANDS::home() == QUASH::COMMANDS::pwd(false));
-  }
+  std::deque<std::string> tokens4 = { "cd", "bin" };
+  QUASH::process p4(tokens4, envp, QUASH::mProcesses);
+  p4.start();
+  REQUIRE("/usr/bin" == QUASH::COMMANDS::pwd(false));
+
+
+  INFO("QUASH::process cd - ~/Desktop then back ~/");
+  std::deque<std::string> tokens5 = { "cd", "~/Desktop" };
+  QUASH::process p5(tokens5, envp, QUASH::mProcesses);
+  p5.start();
+  REQUIRE("~/Desktop" == QUASH::COMMANDS::pwd(true));
+  REQUIRE((std::string(QUASH::COMMANDS::home()) + "/Desktop") == QUASH::COMMANDS::pwd(false));
+
+  std::deque<std::string> tokens6 = { "cd", "~/" };
+  QUASH::process p6(tokens6, envp, QUASH::mProcesses);
+  p6.start();
+  REQUIRE("~/" == QUASH::COMMANDS::pwd(true));
+  REQUIRE(QUASH::COMMANDS::home() == QUASH::COMMANDS::pwd(false));
 }
