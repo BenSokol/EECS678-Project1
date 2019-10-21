@@ -3,7 +3,7 @@
 * @Author:   Ben Sokol <Ben>
 * @Email:    ben@bensokol.com
 * @Created:  September 23rd, 2019 [8:00pm]
-* @Modified: October 21st, 2019 [1:09am]
+* @Modified: October 21st, 2019 [1:47am]
 * @Version:  1.0.0
 *
 * Copyright (C) 2019 by Ben Sokol. All Rights Reserved.
@@ -42,7 +42,9 @@ namespace QUASH {
   std::pair<std::deque<std::shared_ptr<process>>, std::mutex> *mProcesses;
 
   main::main() : mPrintEnv(false), mDisplayUsage(false), mStatus(STATUS_SUCCESS) {
-    mProcesses = new std::pair<std::deque<std::shared_ptr<process>>, std::mutex>();
+    if (QUASH::mProcesses == nullptr) {
+      mProcesses = new std::pair<std::deque<std::shared_ptr<process>>, std::mutex>();
+    }
   }
 
   void main::init(int argc, char **argv, char **envp) {
